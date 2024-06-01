@@ -1,21 +1,21 @@
 generator client {
-    provider = "prisma-client-js"
-    output   = "./generated/client2"
+  provider = "prisma-client-js"
+  output   = "./generated/client2"
 }
 
 datasource db {
-    provider = "mysql"
-    url      = env("DATABASE_URL2")
+  provider = "mysql"
+  url      = env("DATABASE_URL2")
 }
 
 model players {
-    name             String @id @map("name")
-    player_unique_id Int    @unique @default(autoincrement()) @map("player_unique_id")
-    stat_fw          Int    @map("stat_fw")
-    stat_mf          Int    @map("stat_mf")
-    stat_df          Int    @map("stat_df")
-    enhance_figure   Int    @map("enhance_figure")
-    condition        Int    @map("condition")
+  player_unique_id Int    @id @default(autoincrement()) @map("player_unique_id")
+  name             String @map("name")
+  stat_fw          Int    @map("stat_fw")
+  stat_mf          Int    @map("stat_mf")
+  stat_df          Int    @map("stat_df")
+  enhance_figure   Int    @default(1) @map("enhance_figure")
+  condition        Int    @default(100) @map("condition")
 
-    @@map("players")
+  @@map("players")
 }
