@@ -9,7 +9,6 @@ datasource db {
 }
 
 model players {
-<<<<<<< HEAD
   player_unique_id Int    @id @default(autoincrement()) @map("player_unique_id")
   name             String @map("name")
   stat_fw          Int    @map("stat_fw")
@@ -17,15 +16,6 @@ model players {
   stat_df          Int    @map("stat_df")
   enhance_figure   Int    @default(1) @map("enhance_figure")
   condition        Int    @default(100) @map("condition")
-=======
-    player_unique_id Int    @id @default(autoincrement()) @map("player_unique_id")
-    name             String @map("name")
-    stat_fw          Int    @map("stat_fw")
-    stat_mf          Int    @map("stat_mf")
-    stat_df          Int    @map("stat_df")
-    enhance_figure   Int    @map("enhance_figure")
-    condition        Int    @map("condition")
->>>>>>> 156b74cc3e082e0bd1878c928a2fc2e748172cab
 
   @@map("players")
 }
