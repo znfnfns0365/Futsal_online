@@ -9,7 +9,7 @@ datasource db {
 }
 
 model matches {
-    match_id      Int @id @default(autoincrement()) @map("userId")
+    match_id      Int @id @default(autoincrement()) @map("match_id")
     player1_id    Int @map("player1_id")
     player2_id    Int @map("player2_id")
     score_player1 Int @map("score_player1")
