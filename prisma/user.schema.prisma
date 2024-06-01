@@ -1,0 +1,36 @@
+generator client {
+    provider = "prisma-client-js"
+    output   = "./generated/client1"
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL1")
+}
+
+model accounts {
+    user_id    String   @id @map("user_id")
+    name       String   @map("name")
+    password   String   @map("password")
+    created_at DateTime @default(now()) @map("created_at")
+
+    teams teams[]
+
+    @@map("accounts")
+}
+
+model teams {
+    director          String @id @map("director")
+    User_id           String @map("User_id")
+    name              String @map("name")
+    candidate_players Json   @map("candidate_players")
+    squad             Json   @map("squad")
+    rating            Int    @map("rating")
+    win               Int    @map("win")
+    draw              Int    @map("draw")
+    lose              Int    @map("lose")
+
+    account accounts @relation(fields: [User_id], references: [user_id], onDelete: Cascade)
+
+    @@map("temas")
+}

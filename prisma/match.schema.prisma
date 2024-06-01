@@ -1,0 +1,19 @@
+generator client {
+    provider = "prisma-client-js"
+    output   = "./generated/client3"
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL3")
+}
+
+model matches {
+    match_id      Int @id @default(autoincrement()) @map("userId")
+    player1_id    Int @map("player1_id")
+    player2_id    Int @map("player2_id")
+    score_player1 Int @map("score_player1")
+    score_player2 Int @map("score_player2")
+
+    @@map("matches")
+}
