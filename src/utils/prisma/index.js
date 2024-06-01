@@ -1,18 +1,18 @@
-import { PrismaClient as userPrisma } from '../../../prisma/generated/client1/index.js';
-import { PrismaClient as playerPrisma } from '../../../prisma/generated/client2/index.js';
-import { PrismaClient as matchPrisma } from '../../../prisma/generated/client3/index.js';
+import { PrismaClient as user } from '../../../prisma/generated/client1/index.js';
+import { PrismaClient as player } from '../../../prisma/generated/client2/index.js';
+import { PrismaClient as match } from '../../../prisma/generated/client3/index.js';
 
-export const userPrisma = new userPrisma({
+export const userPrisma = new user({
   log: ['query', 'info', 'warn', 'error'],
   errorFormat: 'pretty',
 });
 
-export const playerPrisma = new playerPrisma({
+export const playerPrisma = new player({
   log: ['query', 'info', 'warn', 'error'],
   errorFormat: 'pretty',
 });
 
-export const matchPrisma = new matchPrisma({
+export const matchPrisma = new match({
   log: ['query', 'info', 'warn', 'error'],
   errorFormat: 'pretty',
 });
