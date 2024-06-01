@@ -4,7 +4,7 @@ import { signIn,signUp } from "../controllers/accountControllers.js";
 
 const accountRouter = express.Router();
 
-accountRouter.get('/',signIn);
-accountRouter.post('/',signUp);
+accountRouter.get('/signIn',signIn);
+accountRouter.post('/signUP',signUp);
 
 export default accountRouter;
