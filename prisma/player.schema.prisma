@@ -9,8 +9,8 @@ datasource db {
 }
 
 model players {
-    name             String @id @map("name")
-    player_unique_id Int    @unique @default(autoincrement()) @map("player_unique_id")
+    player_unique_id Int    @id @default(autoincrement()) @map("player_unique_id")
+    name             String @map("name")
     stat_fw          Int    @map("stat_fw")
     stat_mf          Int    @map("stat_mf")
     stat_df          Int    @map("stat_df")
