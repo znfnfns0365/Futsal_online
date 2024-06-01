@@ -16,5 +16,7 @@
     "prisma": "^5.14.0",
     "winston": "^3.13.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "jsdoc": "^4.0.3"
+  }
 }

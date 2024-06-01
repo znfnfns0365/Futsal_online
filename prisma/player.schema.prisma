@@ -1,11 +1,11 @@
 generator client {
-    provider = "prisma-client-js"
-    output   = "./generated/client2"
+  provider = "prisma-client-js"
+  output   = "./generated/client2"
 }
 
 datasource db {
-    provider = "mysql"
-    url      = env("DATABASE_URL2")
+  provider = "mysql"
+  url      = env("DATABASE_URL2")
 }
 
 model players {
@@ -17,5 +17,5 @@ model players {
     enhance_figure   Int    @map("enhance_figure")
     condition        Int    @map("condition")
 
-    @@map("players")
+  @@map("players")
 }
