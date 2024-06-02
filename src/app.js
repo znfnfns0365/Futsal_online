@@ -1,6 +1,6 @@
 import express from 'express';
 //import cookieParser from 'cookie-parser';
-//import errorHandlingMiddlewares from './middlewares/error-handling.middlewares.js';
+//import errorHandlingMiddlewares from './middleware/error-handling.middlewares.js';
 import accountRouter from './routers/accounts.js'
 
 const app = express();
