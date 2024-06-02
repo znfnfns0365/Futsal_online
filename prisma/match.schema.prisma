@@ -9,21 +9,12 @@ datasource db {
 }
 
 model matches {
-<<<<<<< HEAD
-    match_id      Int      @id @default(autoincrement()) @map("match_id")
-    player1_id    Int      @map("player1_id")
-    player2_id    Int      @map("player2_id")
-    score_player1 Int      @map("score_player1")
-    score_player2 Int      @map("score_player2")
-    created_at    DateTime @default(now()) @map("created_at")
-=======
   match_id      Int      @id @default(autoincrement()) @map("match_id")
   player1_id    Int      @map("player1_id")
   player2_id    Int      @map("player2_id")
   score_player1 Int      @map("score_player1")
   score_player2 Int      @map("score_player2")
   created_at    DateTime @default(now())
->>>>>>> b08e4901898283dd894de2fdfee2f3c1643fcbaf
 
   @@map("matches")
 }
