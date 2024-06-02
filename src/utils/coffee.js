@@ -1,6 +1,6 @@
 //파일 이름을 정하지 못해서 커피로 했습니다. 여기에는 자주 사용하는 함수를 작성하면 됩니다
 import {userPrisma,playerPrisma,matchPrisma} from "../utils/prisma/index.js"
-import {bcrypt} from "bcrypt";
+import bcrypt from "bcrypt";
 
 
 

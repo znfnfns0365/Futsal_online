@@ -1,10 +1,10 @@
-import express from "express";
+import express from 'express';
 
-import { signIn } from "../controllers/accountControllers";
+import { signIn, signUp } from '../controllers/accountControllers.js';
 
 const accountRouter = express.Router();
 
-accountRouter.get('/',signIn);
-
+accountRouter.post('/signIn', signIn);
+accountRouter.post('/signUP', signUp);
 
 export default accountRouter;
