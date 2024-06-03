@@ -182,3 +182,42 @@ export const updateDirector = async (req, res) => {
     } 감독으로 수정되었습니다.`,
   });
 };
+
+/** 캐시 충전 API */
+export const cashCarge = async (req, res) => {
+  try {
+    const Director = req.params.director;
+    const user = req.user;
+
+    const team = await Budget.findFirst({
+      where: {
+        Director,
+        User_id: user.user_Id,
+      },
+    });
+
+    if (!team) {
+      return res.status(403).json({ message: '내 감독이 아닙니다.' });
+    }
+
+    await Budget.update({
+      where: { Director },
+      data: { money: { increment: 10000 } },
+    });
+
+    const updatedBudget = await Budget.findUnique({
+      where: { Director },
+      select: { money: true },
+    });
+
+    return res.status(200).json({
+      message: '캐시가 충전되었습니다.',
+      money: updatedBudget.money,
+    });
+  } catch (error) {
+    console.error('캐시 충전 중 에러 발생:', error);
+    return res
+      .status(500)
+      .json({ message: '캐시 충전 중 오류가 발생했습니다.' });
+  }
+};
