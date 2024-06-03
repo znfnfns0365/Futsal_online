@@ -3,7 +3,7 @@ import express from 'express';
 //import errorHandlingMiddlewares from './middlewares/error-handling.middlewares.js';
 import accountRouter from './routers/accounts.js';
 import directorRouter from './routers/directors.js';
-import playerRouter from './routers/player.js'
+import playerRouter from './routers/players.js'
 
 import storeRouter from './routers/store.js';
 
