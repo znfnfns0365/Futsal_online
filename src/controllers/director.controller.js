@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import Joi from 'joi';
 import bcrypt from 'bcrypt';
 import { userPrisma } from '../utils/prisma/index.js';
+import { playerPrisma } from '../utils/prisma/index.js';
 
 const Teams = userPrisma.teams;
 const Budget = userPrisma.budget; 
@@ -177,9 +178,8 @@ export const updateDirector = async (req, res) => {
   });
 
   return res.status(200).json({
-    message: `팀 ${newName ?? name}, ${
-      newDirector ?? director
-    } 감독으로 수정되었습니다.`,
+    message: `팀 ${newName ?? name}, ${newDirector ?? director
+      } 감독으로 수정되었습니다.`,
   });
 };
 
@@ -221,3 +221,115 @@ export const cashCarge = async (req, res) => {
       .json({ message: '캐시 충전 중 오류가 발생했습니다.' });
   }
 };
+
+/* 팀의 선발 선수 체크 API */
+export const checkDirectorTeam = async (req, res) => {
+  const director = req.params.director; // parameter 가져오기
+
+  const team = await Teams.findFirst({
+    // director가 같은 객체 찾기
+    where: { director },
+    select: {
+      director: true,
+      User_id: true,
+      name: true,
+      squad: true,
+    },
+  });
+
+  if (!team) {
+    // 없으면 에러 메시지
+    return res
+      .status(404)
+      .json({ errorMessage: `${director} 감독은 존재하지 않습니다.` });
+  }
+  const { df, fw, mf } = team.squad;
+
+  if (!df) {
+    return res
+      .status(404)
+      .json({ errorMessage: `df에 선수를 등록하지 않았습니다.` });
+  }
+  else if (!fw) {
+    return res
+      .status(404)
+      .json({ errorMessage: `fw에 선수를 등록하지 않았습니다.` });
+  }
+  else if (!mf) {
+    return res
+      .status(404)
+      .json({ errorMessage: `mf에 선수를 등록하지 않았습니다.` });
+  }
+
+  return res.status(200).json(team.squad);
+}
+
+/* 팀의 선발 선수 변경 API */
+export const changeTeamPlayer = async (req, res) => {
+  const director = req.params.director; // parameter 가져오기
+  const position = req.params.position; // parameter 가져오기
+  const player_unique_id = parseInt(req.params.playerId); // parameter 가져오기
+
+  const team = await Teams.findFirst({
+    // director가 같은 객체 찾기
+    where: { director },
+    select: {
+      director: true,
+      User_id: true,
+      candidate_players: true,
+      name: true,
+      squad: true,
+    },
+  });
+
+  const player = await getPlayer(player_unique_id);
+
+  const players = team.candidate_players;
+
+  if (player === null) {
+    // 없으면 에러 메시지
+    return res
+      .status(404)
+      .json({ errorMessage: `${player_unique_id} 라는 id를 가진 선수는 존재하지 않습니다.` });
+  }
+
+  return res.status(200).json(players);
+}
+
+export const testAddPlayer = async (req, res) => {
+  const director = req.params.director; // parameter 가져오기
+  const player_unique_id = parseInt(req.params.playerId); // parameter 가져오기
+
+  const team = await Teams.findFirst({
+    // director가 같은 객체 찾기
+    where: { director },
+    select: {
+      director: true,
+      User_id: true,
+      candidate_players: true,
+      name: true,
+      squad: true,
+    },
+  });
+
+  const player = await getPlayer(player_unique_id);
+
+  if (!team.candidate_players.includes(player)) {
+    team.candidate_players.push(player);
+  }
+
+  const players = team.candidate_players;
+  return res.status(200).json(players);
+}
+
+async function getPlayer(id) {
+  const player = await playerPrisma.players.findFirst({
+    where: {
+      player_unique_id: id,
+    },
+  });
+  if (!player) {
+    return null;
+  }
+  return player;
+}
