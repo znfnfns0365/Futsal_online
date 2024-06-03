@@ -3,6 +3,8 @@ import express from 'express';
 //import errorHandlingMiddlewares from './middlewares/error-handling.middlewares.js';
 import accountRouter from './routers/accounts.js';
 import directorRouter from './routers/directors.js';
+import playerRouter from './routers/player.js'
+
 import storeRouter from './routers/store.js';
 
 
@@ -15,6 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 //app.use('/api', [accountRouter]);
 app.use('/api/account', accountRouter);
 app.use('/api/director', directorRouter);
+app.use('/api/player', playerRouter);
 app.use('/api/store',storeRouter);
 
 app.listen(PORT, () => {

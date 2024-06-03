@@ -1,3 +1,51 @@
+import jwt from 'jsonwebtoken';
+import express from 'express';
+import dotenv from 'dotenv';
+import Joi from 'joi';
+import bcrypt from 'bcrypt';
+import { userPrisma,playerPrisma } from '../utils/prisma/index.js';
+
+//감독 팀 내 선수 목록 조회 like 아이템 인벤토리
+export const playerInventory = async (req, res, next) => {
+  //director 경로 값 전달
+  const { director } = req.params;
+  //로그인 되어있는  user_id값 전달
+  const userId = req.user_id;
+
+  //const myUser = req.user;
+  //
+  //if (!myUser) {
+  //  return res.status(402).json({ errorMessage: '내 계정이 아닙니다' });
+  //}
+
+  //찾으려는 인벤토리가 내 계정의 인벤토리인지 검증
+  try {
+    const myAccount = await userPrisma.teams.findFirst({
+      where: {
+        //로그인된 계정의 여러개의 감독 중 찾고자 하는 감독이 있는지 검증
+        user_id: userId,
+        director,
+      },
+    });
+    if (!myAccount) {
+      return res
+        .status(401)
+        .json({ errorMessage: '해당 감독이 존재하지 않습니다' });
+    }
+
+    //해당 감독 인벤토리 찾기
+    const [CandidatePlayers] = await userPrisma.teams.findMany({
+      where: { director },
+      select: {
+        candidate_players: true,
+      },
+    });
+
+    return res.status(200).json(CandidatePlayers);
+  } catch (err) {
+    return res.status(400).json({ errorMessage: err.message });
+  }
+};
 import { userPrisma, playerPrisma } from '../utils/prisma/index.js';
 
 //선수 뽑기 기능 추가
@@ -130,3 +178,61 @@ async function pickPlayer() {
   const pickResult = { id, player_unique_id, name, condition };
   return pickResult;
 }
+
+//선수 상세목록 조회 API
+export const myPlayerInfo = async (req, res, next) => {
+  //조회하는 클라이언트가 로그인 된 사용자인지
+
+  //경로 매개변수 전달
+  const playerId = req.params;
+
+  const nowDirector = await userPrisma.teams.findFirst({
+    where: {
+      director: playerId.director,
+    },
+  });
+  //candidate_player가 빈 객체일 경우
+  if (Object.keys(nowDirector.candidate_players).length === 0) {
+    return res.status(404).json({ message: 'candidate_player가 비어있습니다' });
+  }
+  //선수가 있다면
+  const dirCandidatePlayer =
+    nowDirector.candidate_players.create.player_unique_id;
+  //   return res.status(403).json( dirCandidatePlayer );
+  //해당 캐릭터의 선수 상세 조회
+  if (
+    playerId.director === nowDirector.director &&
+    +playerId.player_unique_id === dirCandidatePlayer
+  ) {
+    const playerInfo = await playerPrisma.players.findFirst({
+      where: {
+        player_unique_id: +playerId.player_unique_id,
+      },
+      select: {
+        player_unique_id: true,
+        name: true,
+        stat_fw: true,
+        stat_mf: true,
+        stat_df: true,
+        enhance_figure: true,
+        condition: true,
+      },
+    });
+    return res.status(200).json({ playerInfo });
+  } else {
+    return res.status(403).json({ message: '해당 선수가 없습니다.' });
+  }
+
+  //데이터베이스 candidate_player에는 player_unique_id가 들어가있다
+  //그거를 map으로 변환해서 res에는 선수의 이름도 출력되게 바꾸기
+  //for(const CandidatePlayer of CandidatePlayers){
+  //    const {player_id} = CandidatePlayers;
+  //
+  //    const playerInfo = await userPrisma.teams.findUnique({
+  //        where:{player_unique_id:player_id},
+  //        select:{
+  //            player_unique_id:true,
+  //        }
+  //    })
+  // }
+};
