@@ -3,8 +3,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import Joi from 'joi';
 import bcrypt from 'bcrypt';
-import { userPrisma } from '../utils/prisma/index.js';
-import { playerPrisma } from '../utils/prisma/index.js';
+import { userPrisma,playerPrisma } from '../utils/prisma/index.js';
 
 const Teams = userPrisma.teams;
 const Budget = userPrisma.budget;
