@@ -9,7 +9,6 @@ import {
   cashCarge,
   checkDirectorTeam,
   changeTeamPlayer,
-  testAddPlayer,
 } from '../controllers/director.controller.js';
 
 const directorRouter = express.Router();
@@ -18,8 +17,7 @@ directorRouter.post('/', authMiddleware, createDirector);
 directorRouter.get('/', authMiddleware, checkDirector);
 directorRouter.get('/:director', authMiddleware, checkDirectorDetail);
 directorRouter.get('/squad/:director',checkDirectorTeam);
-directorRouter.get('/squad/:director/:position/:playerId',changeTeamPlayer);
-directorRouter.post('/squad/:director/:playerId',authMiddleware,testAddPlayer);
+directorRouter.post('/squad/change/:director',authMiddleware,changeTeamPlayer);
 directorRouter.delete('/:director', authMiddleware, deleteDirector);
 directorRouter.patch('/:director', authMiddleware, updateDirector);
 directorRouter.post('/:director/cash', authMiddleware, cashCarge);
