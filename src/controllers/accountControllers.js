@@ -10,7 +10,7 @@ export const signIn = async (req, res) => {
   try {
     const { user_id, password } = req.body;
     const user = await findAccount(user_id);
-    checkPassword(user, password);
+    await checkPassword(user, password);
     const token = jwt.sign({ user_id: user.user_id }, process.env.JWT_SECRET, {
       expiresIn: '10h',
     });
