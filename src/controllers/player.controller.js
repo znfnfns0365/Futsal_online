@@ -204,9 +204,11 @@ export const releasePlayer = async (req, res, next) => {
 
   //경로 매개변수 전달
   const { playerId } = req.params;
+  //playerId = {director:"/:director",}
 
   //해당 선수 방출(삭제)
   const deletePlayer = await userPrisma.teams.findFirst({});
 
   //반환
+  return res.status(200).json();
 };
