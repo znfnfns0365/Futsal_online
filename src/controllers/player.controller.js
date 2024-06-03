@@ -119,60 +119,6 @@ export const gacha = async (req, res) => {
   } catch (error) {
     res.status(500).json({ errorMessage: error.message });
   }
-  const team = await userPrisma.teams.findFirst({
-    where: {
-      director: director,
-    },
-  });
-  if (!team) {
-    res
-      .status(404)
-      .json({ message: '해당 감독 이름으로 생성된 팀을 찾을 수 없습니다' });
-  }
-
-  //1.로그인 미들웨어를 통과한 user_id와 parms로 받아온 teams 테이블의 감독명이 관계가 있는지 검사한다
-  const user = req.user;
-  if (team.User_id != user.user_id) {
-    res.status(403).json({
-      message:
-        '해당 감독의 정보에 접근할 권한을 가지고 있지 않습니다 ID 불일치',
-    });
-  }
-
-  //2.team 변수의 감독이름 id와 연결된 budget 테이블을 찾는다
-  const budget = await userPrisma.budget.findFirst({
-    where: {
-      Director: team.director,
-    },
-  });
-
-  //3.buget에 이상이 있는지,돈이 있는지 확인한다
-  if (!budget) {
-    res
-      .status(404)
-      .json({ message: '해당 팀의 소지금 테이블이 존재하지 않습니다' });
-  }
-  if (budget.money < 1000) {
-    res.status(402).json({ message: '소지금이 부족합니다 : ' + budget.money });
-  }
-
-  //4.이상이 없다면 트랜잭션을 이용해 선수를 뽑고 돈을 차감한다음 선수의 데이터를 teams테이블의 candidate_players에 넣어준다
-  const result = await userPrisma.$transaction(async (tx) => {
-    const pick = await tx.user.candidate_players.create(pickPlayer());
-    if (!pick) {
-      res.status(500).json({ message: '뽑기 로직에서 오류 발생' });
-    }
-    await tx.budget.update({
-      where: {
-        Director: budget.Director,
-      },
-      data: {
-        money: {
-          decrement: 1000,
-        },
-      },
-    });
-  });
 };
 
 async function pickPlayer() {
@@ -232,11 +178,10 @@ export const myPlayerInfo = async (req, res, next) => {
         condition: true,
       },
     });
-    return res.status(200).json({ playerInfo });
+    return res.status(200).json(playerInfo);
   } else {
     return res.status(403).json({ message: '해당 선수가 없습니다.' });
   }
-
 
   //데이터베이스 candidate_player에는 player_unique_id가 들어가있다
   //그거를 map으로 변환해서 res에는 선수의 이름도 출력되게 바꾸기
@@ -250,4 +195,18 @@ export const myPlayerInfo = async (req, res, next) => {
   //        }
   //    })
   // }
+};
+
+//선수 방출(삭제) API
+export const releasePlayer = async (req, res, next) => {
+  //삭제하려는 클라이언트가 로그인 된 사용자인지 검증
+  const { userId } = req.user;
+
+  //경로 매개변수 전달
+  const { playerId } = req.params;
+
+  //해당 선수 방출(삭제)
+  const deletePlayer = await userPrisma.teams.findFirst({});
+
+  //반환
 };
