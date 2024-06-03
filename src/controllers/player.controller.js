@@ -119,6 +119,7 @@ export const gacha = async (req, res) => {
   } catch (error) {
     res.status(500).json({ errorMessage: error.message });
   }
+  
   const team = await userPrisma.teams.findFirst({
     where: {
       director: director,
@@ -236,7 +237,6 @@ export const myPlayerInfo = async (req, res, next) => {
   } else {
     return res.status(403).json({ message: '해당 선수가 없습니다.' });
   }
-
 
   //데이터베이스 candidate_player에는 player_unique_id가 들어가있다
   //그거를 map으로 변환해서 res에는 선수의 이름도 출력되게 바꾸기

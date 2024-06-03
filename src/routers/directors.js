@@ -6,6 +6,7 @@ import {
   checkDirectorDetail,
   deleteDirector,
   updateDirector,
+  cashCarge,
 } from '../controllers/director.controller.js';
 
 const directorRouter = express.Router();
@@ -15,5 +16,6 @@ directorRouter.get('/', authMiddleware, checkDirector);
 directorRouter.get('/:director', authMiddleware, checkDirectorDetail);
 directorRouter.delete('/:director', authMiddleware, deleteDirector);
 directorRouter.patch('/:director', authMiddleware, updateDirector);
+directorRouter.post('/:director/cash', authMiddleware, cashCarge);
 
 export default directorRouter;
