@@ -54,6 +54,7 @@ export const gacha =async (req,res)=>{
                 }
             })
         });
+        res.status(200).json({data:result});
     }catch(error){
         res.status(500).json({errorMessage:error.message});
     }
@@ -66,6 +67,13 @@ async function pickPlayer() {
             enhance_figure: 1
         }
     });
+    /*
+    변경전 코드로직 선수의 정보를 통째로 넘겨준다
     const randomIndex = Math.floor(Math.random() * players.length);
     return players[randomIndex];
+    */
+    const randomIndex = Math.floor(Math.random() * players.length);
+    const {player_unique_id,name} = players[randomIndex];
+    const pickResult = {player_unique_id,name};
+    console.log(pickResult);
 }
