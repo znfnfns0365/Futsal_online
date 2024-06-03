@@ -55,7 +55,7 @@ export const gacha = async (req, res) => {
     //0. 감독명이 URL을 통해 잘 전달되었는지,전달된 감독명이 DB에 존재하는지 검사한다
     const { director } = req.params;
     if (!director) {
-      res
+      return res
         .status(401)
         .json({ message: '감독명이 URL을 통해 전달되지 않았습니다' });
     }
@@ -65,7 +65,7 @@ export const gacha = async (req, res) => {
       },
     });
     if (!team) {
-      res
+      return res
         .status(404)
         .json({ message: '해당 감독 이름으로 생성된 팀을 찾을 수 없습니다' });
     }
@@ -74,7 +74,7 @@ export const gacha = async (req, res) => {
     //1.로그인 미들웨어를 통과한 user_id와 parms로 받아온 teams 테이블의 감독명이 관계가 있는지 검사한다
     const user = req.user;
     if (team.User_id != user.user_id) {
-      res.status(403).json({
+      return res.status(403).json({
         message:
           '해당 감독의 정보에 접근할 권한을 가지고 있지 않습니다 ID 불일치',
       });
@@ -89,12 +89,12 @@ export const gacha = async (req, res) => {
 
     //3.buget에 이상이 있는지,돈이 있는지 확인한다
     if (!budget) {
-      res
+      return res
         .status(404)
         .json({ message: '해당 팀의 소지금 테이블이 존재하지 않습니다' });
     }
     if (budget.money < 1000) {
-      res
+      return res
         .status(402)
         .json({ message: '소지금이 부족합니다 : ' + budget.money });
     }
@@ -123,13 +123,10 @@ export const gacha = async (req, res) => {
         playersArray.push(playerData);
       } else {
         //선수 정보가 하나 이상 있을때
-        playersArray.push(exsistPlayerData[0].candidate_players); //candidate_players 스텔라 필드의 데이터를 가져옴
+        playersArray.push(exsistPlayerData[0].candidate_players); //candidate_players 스칼라 필드의 데이터를 가져옴
         playersArray = playersArray.flat(Infinity); // 재귀적으로 배열을 평탄화 (원래는 2중배열임)
         playersArray.push(playerData); //새로 추가된 값을 1차 배열에 추가
       }
-
-      console.log(JSON.stringify(playersArray, null, 2));
-
       await tx.teams.update({
         where: {
           director: director,
@@ -154,7 +151,7 @@ export const gacha = async (req, res) => {
     if (!pick) {
       return res.status(500).json({ message: '뽑기 로직에서 오류 발생' });
     }
-    res.status(200).json({ data: pick });
+    return res.status(200).json({ data: pick });
   } catch (error) {
     res.status(500).json({ errorMessage: error.message });
   }
