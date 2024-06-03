@@ -365,31 +365,8 @@ export const changeTeamPlayer = async (req, res) => {
 
     })
     return res.status(200).json(team.squad);
-
-
-
-
-
-
-    // squad[position] = isExistPlayer;
-    // 해당 팀의 squad의 position에 아무런 선수가 없다면 선수 넣어주기
-    // if(!squad[position]){
-    //   squad[position] = isExistPlayer;
-    // }
-
-    // await Teams.update({
-    //   where: {
-    //     director,
-    //   },
-    //   data: {
-    //     squad : squad,
-    //   },
-    // });
-
-
   }
   catch (error) {
     res.status(500).json({ errorMessage: error.message });
   }
 };
-
