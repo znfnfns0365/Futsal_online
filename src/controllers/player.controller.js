@@ -122,13 +122,10 @@ export const gacha = async (req, res) => {
         playersArray.push(playerData);
       } else {
         //선수 정보가 하나 이상 있을때
-        playersArray.push(exsistPlayerData[0].candidate_players); //candidate_players 스텔라 필드의 데이터를 가져옴
+        playersArray.push(exsistPlayerData[0].candidate_players); //candidate_players 스칼라 필드의 데이터를 가져옴
         playersArray = playersArray.flat(Infinity); // 재귀적으로 배열을 평탄화 (원래는 2중배열임)
         playersArray.push(playerData); //새로 추가된 값을 1차 배열에 추가
       }
-
-      console.log(JSON.stringify(playersArray, null, 2));
-
       await tx.teams.update({
         where: {
           director: director,
