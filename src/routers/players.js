@@ -7,6 +7,5 @@ const playerRouter = express.Router();
 
 playerRouter.get('/:director', playerInventory);
 playerRouter.get('/:director/:player_unique_id', myPlayerInfo);
-//accountRouter.post('/:director/gacha', gacha);
 
 export default playerRouter;
