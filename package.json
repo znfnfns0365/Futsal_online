@@ -6,6 +6,9 @@
   "repository": "https://github.com/4cozm/Team_Project_3.git",
   "author": "4cozm <17328rm@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "app": "nodemon src/app.js"
+  },
   "dependencies": {
     "@prisma/client": "^5.14.0",
     "bcrypt": "^5.1.1",
