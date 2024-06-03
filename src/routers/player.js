@@ -7,7 +7,7 @@ const playerRouter = express.Router();
 
 playerRouter.get('/:director', playerInventory);
 playerRouter.get('/:director/:player_unique_id', myPlayerInfo);
-playerRouter.get('/:director/:player_unique_id', releasePlayer);
+playerRouter.delete('/:director/:player_unique_id', authMiddleware, releasePlayer);
 playerRouter.patch('/gacha', gacha);
 
 export default playerRouter;

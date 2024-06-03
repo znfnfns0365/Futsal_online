@@ -47,7 +47,6 @@ export const playerInventory = async (req, res, next) => {
   }
 };
 
-
 //선수 뽑기 기능 추가
 export const gacha = async (req, res) => {
   try {
@@ -192,19 +191,23 @@ export const myPlayerInfo = async (req, res, next) => {
     },
   });
   //candidate_player가 빈 객체일 경우
-  if (Object.keys(nowDirector.candidate_players).length === 0) {
+  if (nowDirector.candidate_players.length === 0) {
     return res.status(404).json({ message: 'candidate_player가 비어있습니다' });
   }
   //선수가 있다면
-  const dirCandidatePlayer =
-    nowDirector.candidate_players.create.player_unique_id;
-  //   return res.status(403).json( dirCandidatePlayer );
+  const dirCandidatePlayer = nowDirector.candidate_players;
+  const arrCandidatePlayer = dirCandidatePlayer.map(
+    (obj) => obj.player_unique_id
+  );
+  // arrCandidatePlayer = [311,921,761]
+
+  // 배열안에 전달받은 id값이 있는지 찾기
+  const playerInArray = arrCandidatePlayer.includes(+playerId.player_unique_id);
+  return res.status(403).json(arrCandidatePlayer);
+
   //해당 캐릭터의 선수 상세 조회
-  if (
-    playerId.director === nowDirector.director &&
-    +playerId.player_unique_id === dirCandidatePlayer
-  ) {
-    const playerInfo = await playerPrisma.players.findFirst({
+  if (playerId.director === nowDirector.director && playerInArray) {
+    const playerInfo = await playerPrisma.players.findMany({
       where: {
         player_unique_id: +playerId.player_unique_id,
       },
