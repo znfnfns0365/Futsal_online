@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 import { userPrisma } from '../utils/prisma/index.js';
 
 const Teams = userPrisma.teams;
-const Budget = userPrisma.budget; 
+const Budget = userPrisma.budget;
 
 /* 감독 생성 API */
 export const createDirector = async (req, res) => {
@@ -52,10 +52,10 @@ export const createDirector = async (req, res) => {
     },
   });
   await Budget.create({
-    data:{
-      Director:newTeam.director
-    }
-  })
+    data: {
+      Director: newTeam.director,
+    },
+  });
   return res.status(201).json({ newTeam });
 };
 

@@ -29,7 +29,7 @@ model teams {
     win               Int    @default(0) @map("win")
     draw              Int    @default(0) @map("draw")
     lose              Int    @default(0) @map("lose")
-    
+
     budget budget?
 
     account accounts @relation(fields: [User_id], references: [user_id], onDelete: Cascade)
@@ -37,12 +37,11 @@ model teams {
     @@map("teams")
 }
 
-
 model budget {
     Director String @id @map("Director")
-    money Int @default(10000)
+    money    Int    @default(10000)
 
-    team teams @relation(fields: [Director],references: [director],onDelete: Cascade)
+    team teams @relation(fields: [Director], references: [director], onDelete: Cascade)
 
     @@map("budget")
 }
