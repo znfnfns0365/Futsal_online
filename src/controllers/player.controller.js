@@ -47,7 +47,6 @@ export const playerInventory = async (req, res, next) => {
   }
 };
 
-
 //선수 뽑기 기능 추가
 export const gacha = async (req, res) => {
   try {
@@ -182,29 +181,30 @@ async function pickPlayer() {
 //선수 상세목록 조회 API
 export const myPlayerInfo = async (req, res, next) => {
   //조회하는 클라이언트가 로그인 된 사용자인지
-
   //경로 매개변수 전달
   const playerId = req.params;
-
   const nowDirector = await userPrisma.teams.findFirst({
     where: {
       director: playerId.director,
     },
   });
-  //candidate_player가 빈 객체일 경우
-  if (Object.keys(nowDirector.candidate_players).length === 0) {
+  //candidate_player가 빈 배열일 경우
+  if (nowDirector.candidate_players.length === 0) {
     return res.status(404).json({ message: 'candidate_player가 비어있습니다' });
   }
   //선수가 있다면
-  const dirCandidatePlayer =
-    nowDirector.candidate_players.create.player_unique_id;
-  //   return res.status(403).json( dirCandidatePlayer );
+  const dirCandidatePlayer = nowDirector.candidate_players;
+  //선수 고유id만 따로 배열로 변환
+  const arrCandidatePlayer = dirCandidatePlayer.map(
+    (obj) => obj.player_unique_id
+  );
+  // arrCandidatePlayer = [311,921,761]
+  // 배열안에 전달받은 id값이 있는지 찾기
+  const playerInArray = arrCandidatePlayer.includes(+playerId.player_unique_id);
+  //return res.status(403).json(arrCandidatePlayer);
   //해당 캐릭터의 선수 상세 조회
-  if (
-    playerId.director === nowDirector.director &&
-    +playerId.player_unique_id === dirCandidatePlayer
-  ) {
-    const playerInfo = await playerPrisma.players.findFirst({
+  if (playerId.director === nowDirector.director && playerInArray) {
+    const playerInfo = await playerPrisma.players.findMany({
       where: {
         player_unique_id: +playerId.player_unique_id,
       },
@@ -218,21 +218,9 @@ export const myPlayerInfo = async (req, res, next) => {
         condition: true,
       },
     });
-    return res.status(200).json({ playerInfo });
+    //반환
+    return res.status(200).json(playerInfo);
   } else {
     return res.status(403).json({ message: '해당 선수가 없습니다.' });
   }
-
-  //데이터베이스 candidate_player에는 player_unique_id가 들어가있다
-  //그거를 map으로 변환해서 res에는 선수의 이름도 출력되게 바꾸기
-  //for(const CandidatePlayer of CandidatePlayers){
-  //    const {player_id} = CandidatePlayers;
-  //
-  //    const playerInfo = await userPrisma.teams.findUnique({
-  //        where:{player_unique_id:player_id},
-  //        select:{
-  //            player_unique_id:true,
-  //        }
-  //    })
-  // }
 };
