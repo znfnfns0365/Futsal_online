@@ -3,7 +3,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import Joi from 'joi';
 import bcrypt from 'bcrypt';
-import { userPrisma,playerPrisma } from '../utils/prisma/index.js';
+import { userPrisma, playerPrisma } from '../utils/prisma/index.js';
 
 //감독 팀 내 선수 목록 조회 like 아이템 인벤토리
 export const playerInventory = async (req, res, next) => {
@@ -46,7 +46,7 @@ export const playerInventory = async (req, res, next) => {
     return res.status(400).json({ errorMessage: err.message });
   }
 };
-import { userPrisma, playerPrisma } from '../utils/prisma/index.js';
+
 
 //선수 뽑기 기능 추가
 export const gacha = async (req, res) => {
