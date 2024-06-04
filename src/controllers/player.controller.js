@@ -190,12 +190,13 @@ export const myPlayerInfo = async (req, res, next) => {
       director: playerId.director,
     },
   });
-  //candidate_player가 빈 객체일 경우
+  //candidate_player가 빈 배열일 경우
   if (nowDirector.candidate_players.length === 0) {
     return res.status(404).json({ message: 'candidate_player가 비어있습니다' });
   }
   //선수가 있다면
   const dirCandidatePlayer = nowDirector.candidate_players;
+  //선수 고유id만 따로 배열로 변환
   const arrCandidatePlayer = dirCandidatePlayer.map(
     (obj) => obj.player_unique_id
   );
@@ -203,7 +204,7 @@ export const myPlayerInfo = async (req, res, next) => {
 
   // 배열안에 전달받은 id값이 있는지 찾기
   const playerInArray = arrCandidatePlayer.includes(+playerId.player_unique_id);
-  return res.status(403).json(arrCandidatePlayer);
+  //return res.status(403).json(arrCandidatePlayer);
 
   //해당 캐릭터의 선수 상세 조회
   if (playerId.director === nowDirector.director && playerInArray) {
@@ -221,37 +222,53 @@ export const myPlayerInfo = async (req, res, next) => {
         condition: true,
       },
     });
+    //반환
     return res.status(200).json(playerInfo);
   } else {
     return res.status(403).json({ message: '해당 선수가 없습니다.' });
   }
-
-  //데이터베이스 candidate_player에는 player_unique_id가 들어가있다
-  //그거를 map으로 변환해서 res에는 선수의 이름도 출력되게 바꾸기
-  //for(const CandidatePlayer of CandidatePlayers){
-  //    const {player_id} = CandidatePlayers;
-  //
-  //    const playerInfo = await userPrisma.teams.findUnique({
-  //        where:{player_unique_id:player_id},
-  //        select:{
-  //            player_unique_id:true,
-  //        }
-  //    })
-  // }
 };
 
 //선수 방출(삭제) API
 export const releasePlayer = async (req, res, next) => {
   //삭제하려는 클라이언트가 로그인 된 사용자인지 검증
-  const { userId } = req.user;
+  const userId = req.user;
 
   //경로 매개변수 전달
-  const { playerId } = req.params;
-  //playerId = {director:"/:director",}
+  const playerId = req.params;
+  //playerId = {director: 삭제할 선수를 가지고있는 감독 "/:director"}
+  //삭제할 카드의 id와 player_unique_id값 body로 전달
+  const { id, player_unique_id } = req.body;
 
-  //해당 선수 방출(삭제)
-  const deletePlayer = await userPrisma.teams.findFirst({});
+  // 로그인된 사용자 검증과 지울 선수가 소속된 감독 검증해서 한개의 팀 찾기
+  const deleteFindTeam = await userPrisma.teams.findFirst({
+    where: {
+      User_id: userId.user_id,
+      director: playerId.director,
+    },
+  });
+  //해당 팀의 candidate_player에 접근
+  let deletePlayerArr = deleteFindTeam.candidate_players;
+
+  //body로 전달받은 값과 일치하는 객체를 필터링
+  let filteredDeletePlayerArr = deletePlayerArr.filter(
+    (player) =>
+      !(player.id === id && player.player_unique_id === player_unique_id)
+  );
+  if (deletePlayerArr.length == filteredDeletePlayerArr.length) {
+    return res.status(405).json({ message: '해당 선수가 존재하지 않습니다.' });
+  }
+  //필터링된 배열을 다시 candidate_players컬럼에 덮어쓰기
+  const updateTeam = await userPrisma.teams.update({
+    where: {
+      User_id: userId.user_id,
+      director: playerId.director,
+    },
+    data: {
+      candidate_players: filteredDeletePlayerArr,
+    },
+  });
 
   //반환
-  return res.status(200).json();
+  return res.status(200).json({ message: '방출 완료' });
 };
