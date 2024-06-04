@@ -3,7 +3,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import Joi from 'joi';
 import bcrypt, { compareSync } from 'bcrypt';
-import probability from '../utils/probability/index.js'
+import probability from '../utils/probability/index.js';
 import { userPrisma, playerPrisma } from '../utils/prisma/index.js';
 
 //감독 팀 내 선수 목록 조회 like 아이템 인벤토리
@@ -248,6 +248,11 @@ export const releasePlayer = async (req, res, next) => {
       director: playerId.director,
     },
   });
+  if (!deleteFindTeam) {
+    return res
+      .status(406)
+      .json({ errorMessage: '해당 감독이 내 계정에 없습니다' });
+  }
   //해당 팀의 candidate_player에 접근
   let deletePlayerArr = deleteFindTeam.candidate_players;
 
@@ -281,7 +286,7 @@ export const playerUpgrade = async (req, res, next) => {
   //로그인 되어있는  user_id값 전달
   const userId = req.user_id;
   const { director } = req.params;
-  
+
   //강화하려는 선수가 내 선수 목록에 있는지 확인
   try {
     const myAccount = await userPrisma.teams.findFirst({
@@ -307,53 +312,61 @@ export const playerUpgrade = async (req, res, next) => {
     let playersArray = [];
     playersArray.push(CandidatePlayers[0].candidate_players);
     playersArray = playersArray.flat(Infinity);
-    
-    const upgradePlayer = playersArray.find(player => player.id == upgrade_player_id);
-    
-    if(!upgradePlayer){
+
+    const upgradePlayer = playersArray.find(
+      (player) => player.id == upgrade_player_id
+    );
+
+    if (!upgradePlayer) {
       return res
         .status(403)
         .json({ errorMessage: '강화 할 선수가 존재하지 않습니다' });
     }
 
-    const materialPlayer = playersArray.find((player) => player.id == material_player_id);
+    const materialPlayer = playersArray.find(
+      (player) => player.id == material_player_id
+    );
 
-    if(!materialPlayer){
+    if (!materialPlayer) {
       return res
         .status(403)
         .json({ errorMessage: '재료 선수가 존재하지 않습니다' });
     }
 
-    if(upgradePlayer.player_unique_id !== materialPlayer.player_unique_id){
+    if (upgradePlayer.player_unique_id !== materialPlayer.player_unique_id) {
       return res
-      .status(400)
-      .json({ errorMessage: '두 선수가 동일한 등급의 같은 선수가 아닙니다.' });
+        .status(400)
+        .json({
+          errorMessage: '두 선수가 동일한 등급의 같은 선수가 아닙니다.',
+        });
     }
 
     const upgrade_player = await playerPrisma.players.findFirst({
       where: {
-        player_unique_id : upgradePlayer.player_unique_id,
-      }
-    })
-  
-    if(upgrade_player.enhance_figure > 9){
+        player_unique_id: upgradePlayer.player_unique_id,
+      },
+    });
+
+    if (upgrade_player.enhance_figure > 9) {
       return res
-      .status(400)
-      .json({ errorMessage: '더 이상 강화가 불가능한 선수 입니다.' });
+        .status(400)
+        .json({ errorMessage: '더 이상 강화가 불가능한 선수 입니다.' });
     }
 
     //랜덤 값 생성(1~100)
     const randomNum = Math.floor(Math.random() * 100) + 1;
     let check = false;
-    if(randomNum < probability(upgrade_player.enhance_figure)) {
-      playersArray = playersArray.filter((player)=> player.id != upgrade_player_id);
-      
+    if (randomNum < probability(upgrade_player.enhance_figure)) {
+      playersArray = playersArray.filter(
+        (player) => player.id != upgrade_player_id
+      );
+
       const upgradeSuccessPlayer = await playerPrisma.players.findFirst({
         where: {
-          name : upgrade_player.name,
-          enhance_figure : upgrade_player.enhance_figure + 1,
-        }
-      })
+          name: upgrade_player.name,
+          enhance_figure: upgrade_player.enhance_figure + 1,
+        },
+      });
       const id = Math.floor(100000 + Math.random() * 900000);
       const condition = 100;
       const { player_unique_id, name } = upgradeSuccessPlayer;
@@ -362,7 +375,9 @@ export const playerUpgrade = async (req, res, next) => {
       check = true;
     }
     //선수 삭제
-    playersArray = playersArray.filter((player)=> player.id != material_player_id);
+    playersArray = playersArray.filter(
+      (player) => player.id != material_player_id
+    );
 
     await userPrisma.teams.update({
       where: {
@@ -373,10 +388,10 @@ export const playerUpgrade = async (req, res, next) => {
       },
     });
 
-    if(check === true){
-      return res.status(200).json({ message : "강화 성공" });
+    if (check === true) {
+      return res.status(200).json({ message: '강화 성공' });
     }
-    return res.status(200).json({ message : "강화 실패" });
+    return res.status(200).json({ message: '강화 실패' });
   } catch (err) {
     return res.status(400).json({ errorMessage: err.message });
   }
