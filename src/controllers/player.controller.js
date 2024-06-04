@@ -65,7 +65,7 @@ export const gacha = async (req, res) => {
       },
     });
     if (!team) {
-      res
+      return res
         .status(404)
         .json({ message: '해당 감독 이름으로 생성된 팀을 찾을 수 없습니다' });
     }
@@ -74,7 +74,7 @@ export const gacha = async (req, res) => {
     //1.로그인 미들웨어를 통과한 user_id와 parms로 받아온 teams 테이블의 감독명이 관계가 있는지 검사한다
     const user = req.user;
     if (team.User_id != user.user_id) {
-      res.status(403).json({
+      return res.status(403).json({
         message:
           '해당 감독의 정보에 접근할 권한을 가지고 있지 않습니다 ID 불일치',
       });
@@ -89,12 +89,12 @@ export const gacha = async (req, res) => {
 
     //3.buget에 이상이 있는지,돈이 있는지 확인한다
     if (!budget) {
-      res
+      return res
         .status(404)
         .json({ message: '해당 팀의 소지금 테이블이 존재하지 않습니다' });
     }
     if (budget.money < 1000) {
-      res
+      return res
         .status(402)
         .json({ message: '소지금이 부족합니다 : ' + budget.money });
     }
@@ -154,9 +154,9 @@ export const gacha = async (req, res) => {
     if (!pick) {
       return res.status(500).json({ message: '뽑기 로직에서 오류 발생' });
     }
-    res.status(200).json({ data: pick });
+    return res.status(200).json({ data: pick });
   } catch (error) {
-    res.status(500).json({ errorMessage: error.message });
+    return res.status(500).json({ errorMessage: error.message });
   }
 };
 
