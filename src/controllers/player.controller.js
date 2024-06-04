@@ -68,7 +68,6 @@ export const gacha = async (req, res) => {
         .status(404)
         .json({ message: '해당 감독 이름으로 생성된 팀을 찾을 수 없습니다' });
     }
-    console.log('0번 통과 완료');
 
     //1.로그인 미들웨어를 통과한 user_id와 parms로 받아온 teams 테이블의 감독명이 관계가 있는지 검사한다
     const user = req.user;
