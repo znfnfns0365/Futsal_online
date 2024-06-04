@@ -4,7 +4,7 @@ import express from 'express';
 import accountRouter from './routers/accounts.js';
 import directorRouter from './routers/directors.js';
 import kickoffRouter from './routers/kickoff.js';
-import playerRouter from './routers/players.js';
+import playersRouter from './routers/players.js';
 import storeRouter from './routers/store.js';
 
 const app = express();
@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/account', accountRouter);
 app.use('/api/director', directorRouter);
 app.use('/api/kickoff', kickoffRouter);
-app.use('/api/player', playerRouter);
+app.use('/api/player', playersRouter);
 app.use('/api/store', storeRouter);
 
 app.listen(PORT, () => {

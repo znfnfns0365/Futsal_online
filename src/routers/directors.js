@@ -9,6 +9,7 @@ import {
   cashCarge,
   checkDirectorTeam,
   changeTeamPlayer,
+  ranking,
 } from '../controllers/director.controller.js';
 
 const directorRouter = express.Router();
@@ -25,5 +26,6 @@ directorRouter.patch(
 directorRouter.delete('/:director', authMiddleware, deleteDirector);
 directorRouter.patch('/:director', authMiddleware, updateDirector);
 directorRouter.post('/:director/cash', authMiddleware, cashCarge);
+directorRouter.get('/ranking', ranking);
 
 export default directorRouter;
