@@ -60,14 +60,14 @@ export const createDirector = async (req, res) => {
       },
     });
     //3명의 새 선수 지급 다만 무료로 주는건 아니고 자동으로 뽑음...
-    const freeGacha =[];
+    const freeGacha = [];
     for (let i = 0; i < 3; i++) {
-      console.log(i+"번째 실행중@@@@@@");
+      console.log(i + '번째 실행중@@@@@@');
       await fetch(`http://localhost:3001/api/store/gacha/${director}`, {
         //URL은 추후 변경할 예정
         method: 'POST',
         headers: {
-          'Authorization': req.token, //토큰값을 넣어줘야함
+          Authorization: req.token, //토큰값을 넣어줘야함
         },
       })
         .then((response) => response.json())
@@ -79,7 +79,7 @@ export const createDirector = async (req, res) => {
         });
     }
 
-    return res.status(201).json({ newTeam,...freeGacha });
+    return res.status(201).json({ newTeam, ...freeGacha });
   } catch (error) {
     return res.status(500).json({ errorMessage: error.message });
   }
