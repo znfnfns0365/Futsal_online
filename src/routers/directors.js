@@ -17,11 +17,15 @@ const directorRouter = express.Router();
 directorRouter.post('/', authMiddleware, createDirector);
 directorRouter.get('/', authMiddleware, checkDirector);
 directorRouter.get('/:director', authMiddleware, checkDirectorDetail);
-directorRouter.get('/squad/:director',checkDirectorTeam);
-directorRouter.patch('/squad/change/:director',authMiddleware,changeTeamPlayer);
+directorRouter.get('/squad/:director', checkDirectorTeam);
+directorRouter.patch(
+  '/squad/change/:director',
+  authMiddleware,
+  changeTeamPlayer
+);
 directorRouter.delete('/:director', authMiddleware, deleteDirector);
 directorRouter.patch('/:director', authMiddleware, updateDirector);
 directorRouter.post('/:director/cash', authMiddleware, cashCarge);
-directorRouter.get('/ranking',ranking);
+directorRouter.get('/ranking', ranking);
 
 export default directorRouter;

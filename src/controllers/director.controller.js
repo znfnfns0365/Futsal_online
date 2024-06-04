@@ -87,120 +87,124 @@ export const createDirector = async (req, res) => {
 
 /* 감독 조회 API */
 export const checkDirector = async (req, res) => {
-  const teamList = await Teams.findMany({
-    select: {
-      name: true,
-      director: true,
-      User_id: true,
-    },
-    orderBy: { User_id: 'asc' },
-    where: {
-      User_id: req.user.user_id,
-    },
-  });
+    const teamList = await Teams.findMany({
+        select: {
+            name: true,
+            director: true,
+            User_id: true,
+        },
+        orderBy: { User_id: 'asc' },
+        where: {
+            User_id: req.user.user_id,
+        },
+    });
 
-  return res.status(200).json({ teamList });
+    return res.status(200).json({ teamList });
 };
 
 /* 감독 상세 조회 API */
 export const checkDirectorDetail = async (req, res) => {
-  const director = req.params.director; // parameter 가져오기
+    const director = req.params.director; // parameter 가져오기
 
-  const team = await Teams.findFirst({
-    // director가 같은 객체 찾기
-    where: { director },
-    select: {
-      director: true,
-      User_id: true,
-      name: true,
-      candidate_players: false,
-      squad: false,
-      rating: true,
-      win: true,
-      draw: true,
-      lose: true,
-    },
-  });
+    const team = await Teams.findFirst({
+        // director가 같은 객체 찾기
+        where: { director },
+        select: {
+            director: true,
+            User_id: true,
+            name: true,
+            candidate_players: false,
+            squad: false,
+            rating: true,
+            win: true,
+            draw: true,
+            lose: true,
+        },
+    });
 
-  if (!team) {
-    // 없으면 에러 메시지
-    return res
-      .status(404)
-      .json({ errorMessage: `${director} 감독은 존재하지 않습니다.` });
-  }
+    if (!team) {
+        // 없으면 에러 메시지
+        return res
+            .status(404)
+            .json({ errorMessage: `${director} 감독은 존재하지 않습니다.` });
+    }
 
-  return res.status(200).json(team);
+    return res.status(200).json(team);
 };
 
 /* 팀/감독 삭제 API */
 export const deleteDirector = async (req, res) => {
-  const director = req.params.director; // parameter 가져오기
+    const director = req.params.director; // parameter 가져오기
 
-  const team = await Teams.findFirst({
-    where: {
-      director,
-      User_id: req.user.user_id,
-    },
-  });
-  if (!team) {
-    // 없으면 에러 메시지
-    return res.status(404).json({ errorMessage: '삭제할 팀/감독이 없습니다.' });
-  }
+    const team = await Teams.findFirst({
+        where: {
+            director,
+            User_id: req.user.user_id,
+        },
+    });
+    if (!team) {
+        // 없으면 에러 메시지
+        return res
+            .status(404)
+            .json({ errorMessage: '삭제할 팀/감독이 없습니다.' });
+    }
 
-  const name = team.name;
-  if (team.User_id !== req.user.user_id) {
-    // 다른 유저의 팀/감독 삭제 시도
+    const name = team.name;
+    if (team.User_id !== req.user.user_id) {
+        // 다른 유저의 팀/감독 삭제 시도
+        return res
+            .status(404)
+            .json({ errorMessage: '다른 사용자의 팀/감독입니다.' });
+    }
+
+    await Teams.delete({
+        where: {
+            director,
+            User_id: req.user.user_id,
+        },
+    }); // director, User_id가 같은 객체 삭제
+
     return res
-      .status(404)
-      .json({ errorMessage: '다른 사용자의 팀/감독입니다.' });
-  }
-
-  await Teams.delete({
-    where: {
-      director,
-      User_id: req.user.user_id,
-    },
-  }); // director, User_id가 같은 객체 삭제
-
-  return res
-    .status(200)
-    .json({ message: `팀 ${name}, ${director} 감독이 방출되었습니다.` });
+        .status(200)
+        .json({ message: `팀 ${name}, ${director} 감독이 방출되었습니다.` });
 };
 
 /* 팀/감독 수정 API */
 export const updateDirector = async (req, res) => {
-  const { newDirector, newName } = req.body;
-  const director = req.params.director; // parameter 가져오기
+    const { newDirector, newName } = req.body;
+    const director = req.params.director; // parameter 가져오기
 
-  const team = await Teams.findFirst({
-    where: {
-      director,
-      User_id: req.user.user_id,
-    },
-  });
-  if (!team) {
-    // 없으면 에러 메시지
-    return res.status(404).json({ errorMessage: '수정할 팀/감독이 없습니다.' });
-  }
+    const team = await Teams.findFirst({
+        where: {
+            director,
+            User_id: req.user.user_id,
+        },
+    });
+    if (!team) {
+        // 없으면 에러 메시지
+        return res
+            .status(404)
+            .json({ errorMessage: '수정할 팀/감독이 없습니다.' });
+    }
 
-  const name = team.name;
-  if (team.User_id !== req.user.user_id) {
-    // 다른 유저의 팀/감독 삭제 시도
-    return res
-      .status(404)
-      .json({ errorMessage: '다른 사용자의 팀/감독입니다.' });
-  }
+    const name = team.name;
+    if (team.User_id !== req.user.user_id) {
+        // 다른 유저의 팀/감독 삭제 시도
+        return res
+            .status(404)
+            .json({ errorMessage: '다른 사용자의 팀/감독입니다.' });
+    }
 
-  await Teams.update({
-    where: {
-      director,
-      User_id: req.user.user_id,
-    },
-    data: {
-      director: newDirector,
-      name: newName,
-    },
-  });
+    await Teams.update({
+        where: {
+            director,
+            User_id: req.user.user_id,
+        },
+        data: {
+            director: newDirector,
+            name: newName,
+        },
+    });
 
   return res.status(200).json({
     message: `팀 ${newName ?? name}, ${
@@ -211,65 +215,65 @@ export const updateDirector = async (req, res) => {
 
 /** 캐시 충전 API */
 export const cashCarge = async (req, res) => {
-  try {
-    const Director = req.params.director;
-    const user = req.user;
+    try {
+        const Director = req.params.director;
+        const user = req.user;
 
-    const team = await Budget.findFirst({
-      where: {
-        Director,
-        User_id: user.user_Id,
-      },
-    });
+        const team = await Budget.findFirst({
+            where: {
+                Director,
+                User_id: user.user_Id,
+            },
+        });
 
-    if (!team) {
-      return res.status(403).json({ message: '내 감독이 아닙니다.' });
+        if (!team) {
+            return res.status(403).json({ message: '내 감독이 아닙니다.' });
+        }
+
+        await Budget.update({
+            where: { Director },
+            data: { money: { increment: 10000 } },
+        });
+
+        const updatedBudget = await Budget.findUnique({
+            where: { Director },
+            select: { money: true },
+        });
+
+        return res.status(200).json({
+            message: '캐시가 충전되었습니다.',
+            money: updatedBudget.money,
+        });
+    } catch (error) {
+        console.error('캐시 충전 중 에러 발생:', error);
+        return res
+            .status(500)
+            .json({ message: '캐시 충전 중 오류가 발생했습니다.' });
     }
-
-    await Budget.update({
-      where: { Director },
-      data: { money: { increment: 10000 } },
-    });
-
-    const updatedBudget = await Budget.findUnique({
-      where: { Director },
-      select: { money: true },
-    });
-
-    return res.status(200).json({
-      message: '캐시가 충전되었습니다.',
-      money: updatedBudget.money,
-    });
-  } catch (error) {
-    console.error('캐시 충전 중 에러 발생:', error);
-    return res
-      .status(500)
-      .json({ message: '캐시 충전 중 오류가 발생했습니다.' });
-  }
 };
 
 /* 팀의 선발 선수 체크 API */
 export const checkDirectorTeam = async (req, res) => {
-  const director = req.params.director; // parameter 가져오기
+    const director = req.params.director; // parameter 가져오기
 
-  const team = await Teams.findFirst({
-    // director가 같은 객체 찾기
-    where: { director },
-    select: {
-      director: true,
-      User_id: true,
-      name: true,
-      squad: true,
-    },
-  });
+    const team = await Teams.findFirst({
+        // director가 같은 객체 찾기
+        where: { director },
+        select: {
+            director: true,
+            User_id: true,
+            name: true,
+            squad: true,
+        },
+    });
 
-  if (!team) {
-    // 없으면 에러 메시지
-    return res
-      .status(404)
-      .json({ errorMessage: `${director} 감독은 존재하지 않습니다.` });
-  }
-  const { df, fw, mf } = team.squad;
+    if (!team) {
+        // 없으면 에러 메시지
+        return res
+            .status(404)
+            .json({ errorMessage: `${director} 감독은 존재하지 않습니다.` });
+    }
+    const { df, fw, mf } = team.squad;
 
   if (!df) {
     return res
@@ -285,7 +289,7 @@ export const checkDirectorTeam = async (req, res) => {
       .json({ errorMessage: `mf에 선수를 등록하지 않았습니다.` });
   }
 
-  return res.status(200).json(team.squad);
+    return res.status(200).json(team.squad);
 };
 
 /* 팀의 선발 선수 변경 API /squad/change/:director */
@@ -296,37 +300,37 @@ export const changeTeamPlayer = async (req, res) => {
     let { position } = req.body;
     const user = req.user;
 
-    // 포지션의 대문자 값을 소문자로 변경
-    position = position.toLowerCase();
+        // 포지션의 대문자 값을 소문자로 변경
+        position = position.toLowerCase();
 
-    // 해당 감독 변수 저장
-    const team = await Teams.findFirst({
-      // director가 같은 객체 찾기
-      where: { director },
-      select: {
-        director: true,
-        User_id: true,
-        name: true,
-        squad: true,
-        candidate_players: true,
-      },
-    });
+        // 해당 감독 변수 저장
+        const team = await Teams.findFirst({
+            // director가 같은 객체 찾기
+            where: { director },
+            select: {
+                director: true,
+                User_id: true,
+                name: true,
+                squad: true,
+                candidate_players: true,
+            },
+        });
 
-    // 해당 감독이 유저의 소유인지 확인
-    if (team.User_id !== user.user_id) {
-      return res
-        .status(403)
-        .json({ errorMessage: `입력하신 감독은 본인 소유가 아닙니다.` });
-    }
+        // 해당 감독이 유저의 소유인지 확인
+        if (team.User_id !== user.user_id) {
+            return res.status(403).json({
+                errorMessage: `입력하신 감독은 본인 소유가 아닙니다.`,
+            });
+        }
 
-    // 해당 감독 인벤토리 찾기
-    const [CandidatePlayers] = await userPrisma.teams.findMany({
-      where: { director },
-      select: {
-        candidate_players: true,
-        squad: true,
-      },
-    });
+        // 해당 감독 인벤토리 찾기
+        const [CandidatePlayers] = await userPrisma.teams.findMany({
+            where: { director },
+            select: {
+                candidate_players: true,
+                squad: true,
+            },
+        });
 
     // 해당 감독의 인벤토리에 body으로 받은 id 를 가진 player들중 제일 앞 요소를 가져옴
     const isExistPlayer = CandidatePlayers.candidate_players.find(
@@ -355,10 +359,10 @@ export const changeTeamPlayer = async (req, res) => {
       condition: isExistPlayer.condition,
     };
 
-    //트랜잭션을 시작 (스쿼드에 선수가 이미 있는 경우 선수를 빼주고 다시 넣어야하니까!)
+        //트랜잭션을 시작 (스쿼드에 선수가 이미 있는 경우 선수를 빼주고 다시 넣어야하니까!)
 
-    const result = await userPrisma.$transaction(async (tx) => {
-      //스쿼드에 넣으려고 하는 포지션에 선수가 있는가?
+        const result = await userPrisma.$transaction(async (tx) => {
+            //스쿼드에 넣으려고 하는 포지션에 선수가 있는가?
 
       //선수가 있는경우 -> 그 선수를 다시 락커룸으로 보내고 새로운 선수를 할당
       if (squad[position]) {
