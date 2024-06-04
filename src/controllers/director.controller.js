@@ -19,7 +19,7 @@ export const createDirector = async (req, res) => {
   //동일한 director 이름 검사
   const sameName = await Teams.findFirst({
     // 동일한 director가 User에게 있는지 찾음
-    where: { director, User_Id: user.user_Id },
+    where: { director },
   });
   if (sameName) {
     // 있다면 에러 메시지 전송
@@ -31,7 +31,7 @@ export const createDirector = async (req, res) => {
   //동일한 팀 이름(name) 검사
   const sameTeam = await Teams.findFirst({
     // 동일한 director가 User에게 있는지 찾음
-    where: { name, User_Id: user.user_Id },
+    where: { name },
   });
   if (sameTeam) {
     // 있다면 에러 메시지 전송
@@ -335,9 +335,9 @@ export const changeTeamPlayer = async (req, res) => {
 
     // 해당 감독이 유저의 소유인지 확인
     if (team.User_id !== user.user_id) {
-      return res
-        .status(403)
-        .json({ errorMessage: `입력하신 감독은 본인 소유가 아닙니다.` });
+      return res.status(403).json({
+        errorMessage: `입력하신 감독은 본인 소유가 아닙니다.`,
+      });
     }
 
     // 해당 감독 인벤토리 찾기

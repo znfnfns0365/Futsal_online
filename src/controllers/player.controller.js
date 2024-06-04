@@ -181,10 +181,8 @@ async function pickPlayer() {
 //선수 상세목록 조회 API
 export const myPlayerInfo = async (req, res, next) => {
   //조회하는 클라이언트가 로그인 된 사용자인지
-
   //경로 매개변수 전달
   const playerId = req.params;
-
   const nowDirector = await userPrisma.teams.findFirst({
     where: {
       director: playerId.director,
@@ -333,11 +331,9 @@ export const playerUpgrade = async (req, res, next) => {
     }
 
     if (upgradePlayer.player_unique_id !== materialPlayer.player_unique_id) {
-      return res
-        .status(400)
-        .json({
-          errorMessage: '두 선수가 동일한 등급의 같은 선수가 아닙니다.',
-        });
+      return res.status(400).json({
+        errorMessage: '두 선수가 동일한 등급의 같은 선수가 아닙니다.',
+      });
     }
 
     const upgrade_player = await playerPrisma.players.findFirst({

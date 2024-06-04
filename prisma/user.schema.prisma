@@ -1,45 +1,45 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "./generated/client1"
+    provider = "prisma-client-js"
+    output   = "./generated/client1"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL1")
+    provider = "mysql"
+    url      = env("DATABASE_URL1")
 }
 
 model accounts {
-  user_id    String   @id @map("user_id")
-  name       String   @map("name")
-  password   String   @map("password")
-  created_at DateTime @default(now()) @map("created_at")
-  teams      teams[]
+    user_id    String   @id @map("user_id")
+    name       String   @map("name")
+    password   String   @map("password")
+    created_at DateTime @default(now()) @map("created_at")
+    teams      teams[]
 
-  @@map("accounts")
+    @@map("accounts")
 }
 
 model teams {
-  director          String   @id @map("director")
-  User_id           String   @map("User_id")
-  name              String   @map("name")
-  candidate_players Json     @map("candidate_players")
-  squad             Json     @map("squad")
-  rating            Int      @default(1000) @map("rating")
-  win               Int      @default(0) @map("win")
-  draw              Int      @default(0) @map("draw")
-  lose              Int      @default(0) @map("lose")
-  budget            budget?
-  account           accounts @relation(fields: [User_id], references: [user_id], onDelete: Cascade)
+    director          String   @id @map("director")
+    User_id           String   @map("User_id")
+    name              String   @map("name")
+    candidate_players Json     @map("candidate_players")
+    squad             Json     @map("squad")
+    rating            Int      @default(1000) @map("rating")
+    win               Int      @default(0) @map("win")
+    draw              Int      @default(0) @map("draw")
+    lose              Int      @default(0) @map("lose")
+    budget            budget?
+    account           accounts @relation(fields: [User_id], references: [user_id], onDelete: Cascade)
 
-  @@index([User_id], map: "teams_User_id_fkey")
-  @@map("teams")
+    @@index([User_id], map: "teams_User_id_fkey")
+    @@map("teams")
 }
 
 model budget {
     Director String @id @map("Director")
-    money Int @default(10000)
+    money    Int    @default(10000)
 
-    team teams @relation(fields: [Director],references: [director],onDelete: Cascade)
+    team teams @relation(fields: [Director], references: [director], onDelete: Cascade)
 
     @@map("budget")
 }
