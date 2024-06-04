@@ -68,7 +68,6 @@ export const gacha = async (req, res) => {
         .status(404)
         .json({ message: '해당 감독 이름으로 생성된 팀을 찾을 수 없습니다' });
     }
-    console.log('0번 통과 완료');
 
     //1.로그인 미들웨어를 통과한 user_id와 parms로 받아온 teams 테이블의 감독명이 관계가 있는지 검사한다
     const user = req.user;
@@ -182,10 +181,8 @@ async function pickPlayer() {
 //선수 상세목록 조회 API
 export const myPlayerInfo = async (req, res, next) => {
   //조회하는 클라이언트가 로그인 된 사용자인지
-
   //경로 매개변수 전달
   const playerId = req.params;
-
   const nowDirector = await userPrisma.teams.findFirst({
     where: {
       director: playerId.director,
@@ -334,11 +331,9 @@ export const playerUpgrade = async (req, res, next) => {
     }
 
     if (upgradePlayer.player_unique_id !== materialPlayer.player_unique_id) {
-      return res
-        .status(400)
-        .json({
-          errorMessage: '두 선수가 동일한 등급의 같은 선수가 아닙니다.',
-        });
+      return res.status(400).json({
+        errorMessage: '두 선수가 동일한 등급의 같은 선수가 아닙니다.',
+      });
     }
 
     const upgrade_player = await playerPrisma.players.findFirst({
