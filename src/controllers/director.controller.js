@@ -369,3 +369,36 @@ export const changeTeamPlayer = async (req, res) => {
     res.status(500).json({ errorMessage: error.message });
   }
 };
+
+
+//rating 순서대로 감독을 줄세워야함
+
+export const ranking = async(req,res)=>{
+  //모든 팀을 불러와서 감독명,팀명,레이팅,승,무,패 정보를 가져온다
+try{
+  const result = await Teams.findMany({
+    where:{
+      OR:[
+        {win:{gt:0}},
+        {draw:{gt:0}},
+        {lose:{gt:0}}
+    ]},
+    orderBy:{
+      rating:"asc"
+    }
+    ,
+    select:{
+      director:true,
+      name:true,
+      rating:true,
+      win:true,
+      draw:true,
+      lose:true
+    }
+  })
+  if(!result){return res.status(404).json({message:"경기 내역이 존재하지 않습니다"})}
+  return res.status(200).json({result});
+}catch(error){
+  return res.status(500).json({errorMessage:error.message+"rating 기능에서 오류 발생"})
+}
+}
