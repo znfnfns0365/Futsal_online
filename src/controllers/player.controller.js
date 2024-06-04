@@ -209,7 +209,7 @@ export const myPlayerInfo = async (req, res, next) => {
 
   //해당 캐릭터의 선수 상세 조회
   if (playerId.director === nowDirector.director && playerInArray) {
-    const playerInfo = await playerPrisma.players.findMany({
+    const playerInfo = await playerPrisma.players.findFirst({
       where: {
         player_unique_id: +playerId.player_unique_id,
       },
