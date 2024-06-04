@@ -3,10 +3,11 @@ import express from 'express';
 import dotenv from 'dotenv';
 import Joi from 'joi';
 import bcrypt from 'bcrypt';
-import { userPrisma } from '../utils/prisma/index.js';
+import { userPrisma,playerPrisma } from '../utils/prisma/index.js';
 
 const Teams = userPrisma.teams;
-const Budget = userPrisma.budget; 
+const Budget = userPrisma.budget;
+const positionVali = ["df", "fw", "mf"];
 
 /* 감독 생성 API */
 export const createDirector = async (req, res) => {
@@ -52,8 +53,8 @@ export const createDirector = async (req, res) => {
     },
   });
   await Budget.create({
-    data:{
-      Director:newTeam.director
+    data: {
+      Director: newTeam.director
     }
   })
   return res.status(201).json({ newTeam });
@@ -177,9 +178,8 @@ export const updateDirector = async (req, res) => {
   });
 
   return res.status(200).json({
-    message: `팀 ${newName ?? name}, ${
-      newDirector ?? director
-    } 감독으로 수정되었습니다.`,
+    message: `팀 ${newName ?? name}, ${newDirector ?? director
+      } 감독으로 수정되었습니다.`,
   });
 };
 
@@ -219,5 +219,153 @@ export const cashCarge = async (req, res) => {
     return res
       .status(500)
       .json({ message: '캐시 충전 중 오류가 발생했습니다.' });
+  }
+};
+
+/* 팀의 선발 선수 체크 API */
+export const checkDirectorTeam = async (req, res) => {
+  const director = req.params.director; // parameter 가져오기
+
+  const team = await Teams.findFirst({
+    // director가 같은 객체 찾기
+    where: { director },
+    select: {
+      director: true,
+      User_id: true,
+      name: true,
+      squad: true,
+    },
+  });
+
+  if (!team) {
+    // 없으면 에러 메시지
+    return res
+      .status(404)
+      .json({ errorMessage: `${director} 감독은 존재하지 않습니다.` });
+  }
+  const { df, fw, mf } = team.squad;
+
+  if (!df) {
+    return res
+      .status(404)
+      .json({ errorMessage: `df에 선수를 등록하지 않았습니다.` });
+  }
+  else if (!fw) {
+    return res
+      .status(404)
+      .json({ errorMessage: `fw에 선수를 등록하지 않았습니다.` });
+  }
+  else if (!mf) {
+    return res
+      .status(404)
+      .json({ errorMessage: `mf에 선수를 등록하지 않았습니다.` });
+  }
+
+  return res.status(200).json(team.squad);
+};
+
+/* 팀의 선발 선수 변경 API /squad/change/:director */
+export const changeTeamPlayer = async (req, res) => {
+  try {
+    const director = req.params.director; // parameter 가져오기
+    const { id } = req.body; // req.body로 position과 id 가져오기
+    let { position } =  req.body;
+    const user = req.user;
+
+    // 포지션의 대문자 값을 소문자로 변경
+    position = position.toLowerCase();
+
+    // 해당 감독 변수 저장
+    const team = await Teams.findFirst({
+      // director가 같은 객체 찾기
+      where: { director },
+      select: {
+        director: true,
+        User_id: true,
+        name: true,
+        squad: true,
+        candidate_players: true,
+      },
+    });
+
+    // 해당 감독이 유저의 소유인지 확인
+    if (team.User_id !== user.user_id) {
+      return res
+        .status(403)
+        .json({ errorMessage: `입력하신 감독은 본인 소유가 아닙니다.` });
+    }
+
+    // 해당 감독 인벤토리 찾기
+    const [CandidatePlayers] = await userPrisma.teams.findMany({
+      where: { director },
+      select: {
+        candidate_players: true,
+        squad: true,
+      },
+    });
+
+    // 해당 감독의 인벤토리에 body으로 받은 id 를 가진 player들중 제일 앞 요소를 가져옴
+    const isExistPlayer = CandidatePlayers.candidate_players.find(player => player.id === id);
+
+    // 해당 감독의 인벤토리에 없다면 404 code를 return
+    if (!isExistPlayer) {
+      return res
+        .status(404)
+        .json({ errorMessage: `${director} 감독은 ${id} 라는 id를 가진 선수를 소지하고 있지 않습니다.` });
+    }
+
+    // 포지션의 입력이 제대로 되었는가 확인
+    if (!positionVali.includes(position)) {
+      return res
+        .status(404)
+        .json({ errorMessage: `잘못된 포지션을 입력하셨습니다. 입력하신 포지션 = ${position}` });
+    }
+
+    const squad = team.squad;
+    //선수의 player_unique_id,id,condition 정보가 들어가야 한다
+    const squadPlayer = {
+      "player_unique_id": isExistPlayer.player_unique_id,
+      "id": isExistPlayer.id,
+      "condition": isExistPlayer.condition,
+    }
+
+    //트랜잭션을 시작 (스쿼드에 선수가 이미 있는 경우 선수를 빼주고 다시 넣어야하니까!)
+
+    const result = await userPrisma.$transaction(async (tx) => {
+      //스쿼드에 넣으려고 하는 포지션에 선수가 있는가?
+
+      //선수가 있는경우 -> 그 선수를 다시 락커룸으로 보내고 새로운 선수를 할당
+      if (squad[position]) {
+        CandidatePlayers.candidate_players.push(squad[position]); // 스쿼드에 있는 선수 -> 락커룸
+        squad[position] = isExistPlayer;                          // 락커룸에 있던 지정한 선수 -> 스쿼드
+        // 스쿼드로 들어간 선수는 락커룸에서 제외
+        CandidatePlayers.candidate_players = CandidatePlayers.candidate_players.filter(player => player.id !== id);
+        console.log(JSON.stringify(CandidatePlayers.candidate_players, null, 2));
+        console.log(JSON.stringify(squad, null, 2));
+      }
+      else  //선수가 없는경우 -> 그냥 새로운 선수를 할당
+      {
+        // 비어있는 스쿼드에 락커룸의 선수를 출전시킴
+        squad[position] = isExistPlayer;
+        // 출전 시킨 선수는 락커룸에서 제외
+        CandidatePlayers.candidate_players = CandidatePlayers.candidate_players.filter(player => player.id !== id);
+      }
+
+      // 바꾼 정보를 DB에 다시 입력
+      await tx.teams.update({
+        where: {
+          director: director,
+        },
+        data :{
+          candidate_players : CandidatePlayers.candidate_players,
+          squad : squad,
+        }
+      })
+
+    })
+    return res.status(200).json(team.squad);
+  }
+  catch (error) {
+    res.status(500).json({ errorMessage: error.message });
   }
 };

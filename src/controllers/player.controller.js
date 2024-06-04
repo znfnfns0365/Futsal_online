@@ -2,7 +2,8 @@ import jwt from 'jsonwebtoken';
 import express from 'express';
 import dotenv from 'dotenv';
 import Joi from 'joi';
-import bcrypt from 'bcrypt';
+import bcrypt, { compareSync } from 'bcrypt';
+import probability from '../utils/probability/index.js'
 import { userPrisma, playerPrisma } from '../utils/prisma/index.js';
 
 //감독 팀 내 선수 목록 조회 like 아이템 인벤토리
@@ -63,7 +64,7 @@ export const gacha = async (req, res) => {
       },
     });
     if (!team) {
-      res
+      return res
         .status(404)
         .json({ message: '해당 감독 이름으로 생성된 팀을 찾을 수 없습니다' });
     }
@@ -72,7 +73,7 @@ export const gacha = async (req, res) => {
     //1.로그인 미들웨어를 통과한 user_id와 parms로 받아온 teams 테이블의 감독명이 관계가 있는지 검사한다
     const user = req.user;
     if (team.User_id != user.user_id) {
-      res.status(403).json({
+      return res.status(403).json({
         message:
           '해당 감독의 정보에 접근할 권한을 가지고 있지 않습니다 ID 불일치',
       });
@@ -87,12 +88,12 @@ export const gacha = async (req, res) => {
 
     //3.buget에 이상이 있는지,돈이 있는지 확인한다
     if (!budget) {
-      res
+      return res
         .status(404)
         .json({ message: '해당 팀의 소지금 테이블이 존재하지 않습니다' });
     }
     if (budget.money < 1000) {
-      res
+      return res
         .status(402)
         .json({ message: '소지금이 부족합니다 : ' + budget.money });
     }
@@ -152,9 +153,9 @@ export const gacha = async (req, res) => {
     if (!pick) {
       return res.status(500).json({ message: '뽑기 로직에서 오류 발생' });
     }
-    res.status(200).json({ data: pick });
+    return res.status(200).json({ data: pick });
   } catch (error) {
-    res.status(500).json({ errorMessage: error.message });
+    return res.status(500).json({ errorMessage: error.message });
   }
 };
 
@@ -271,4 +272,112 @@ export const releasePlayer = async (req, res, next) => {
 
   //반환
   return res.status(200).json({ message: '방출 완료' });
+};
+
+//선수 강화 API
+export const playerUpgrade = async (req, res, next) => {
+  //director 경로 값 전달
+  const { upgrade_player_id, material_player_id } = req.body;
+  //로그인 되어있는  user_id값 전달
+  const userId = req.user_id;
+  const { director } = req.params;
+  
+  //강화하려는 선수가 내 선수 목록에 있는지 확인
+  try {
+    const myAccount = await userPrisma.teams.findFirst({
+      where: {
+        //로그인된 계정의 여러개의 감독 중 찾고자 하는 감독이 있는지 검증
+        user_id: userId,
+        director,
+      },
+    });
+    if (!myAccount) {
+      return res
+        .status(401)
+        .json({ errorMessage: '해당 감독이 존재하지 않습니다' });
+    }
+
+    //해당 감독 인벤토리 찾기
+    const CandidatePlayers = await userPrisma.teams.findMany({
+      where: { director },
+      select: {
+        candidate_players: true,
+      },
+    });
+    let playersArray = [];
+    playersArray.push(CandidatePlayers[0].candidate_players);
+    playersArray = playersArray.flat(Infinity);
+    
+    const upgradePlayer = playersArray.find(player => player.id == upgrade_player_id);
+    
+    if(!upgradePlayer){
+      return res
+        .status(403)
+        .json({ errorMessage: '강화 할 선수가 존재하지 않습니다' });
+    }
+
+    const materialPlayer = playersArray.find((player) => player.id == material_player_id);
+
+    if(!materialPlayer){
+      return res
+        .status(403)
+        .json({ errorMessage: '재료 선수가 존재하지 않습니다' });
+    }
+
+    if(upgradePlayer.player_unique_id !== materialPlayer.player_unique_id){
+      return res
+      .status(400)
+      .json({ errorMessage: '두 선수가 동일한 등급의 같은 선수가 아닙니다.' });
+    }
+
+    const upgrade_player = await playerPrisma.players.findFirst({
+      where: {
+        player_unique_id : upgradePlayer.player_unique_id,
+      }
+    })
+  
+    if(upgrade_player.enhance_figure > 9){
+      return res
+      .status(400)
+      .json({ errorMessage: '더 이상 강화가 불가능한 선수 입니다.' });
+    }
+
+    //랜덤 값 생성(1~100)
+    const randomNum = Math.floor(Math.random() * 100) + 1;
+    let check = false;
+    if(randomNum < probability(upgrade_player.enhance_figure)) {
+      playersArray = playersArray.filter((player)=> player.id != upgrade_player_id);
+      
+      const upgradeSuccessPlayer = await playerPrisma.players.findFirst({
+        where: {
+          name : upgrade_player.name,
+          enhance_figure : upgrade_player.enhance_figure + 1,
+        }
+      })
+      const id = Math.floor(100000 + Math.random() * 900000);
+      const condition = 100;
+      const { player_unique_id, name } = upgradeSuccessPlayer;
+      const pickResult = { id, player_unique_id, name, condition };
+      playersArray.push(pickResult);
+      check = true;
+    }
+    //선수 삭제
+    playersArray = playersArray.filter((player)=> player.id != material_player_id);
+
+    await userPrisma.teams.update({
+      where: {
+        director,
+      },
+      data: {
+        candidate_players: playersArray,
+      },
+    });
+
+    if(check === true){
+      return res.status(200).json({ message : "강화 성공" });
+    }
+    return res.status(200).json({ message : "강화 실패" });
+  } catch (err) {
+    return res.status(400).json({ errorMessage: err.message });
+  }
 };
