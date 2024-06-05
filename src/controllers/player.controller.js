@@ -174,7 +174,20 @@ async function pickPlayer() {
   const condition = 100;
   const randomIndex = Math.floor(Math.random() * players.length);
   const { player_unique_id, name } = players[randomIndex];
-  const pickResult = { id, player_unique_id, name, condition };
+  const { stat_fw, stat_mf, stat_df } = await playerPrisma.players.findFirst({
+    where: {
+      player_unique_id,
+    },
+  });
+  const pickResult = {
+    id,
+    player_unique_id,
+    name,
+    condition,
+    stat_fw,
+    stat_mf,
+    stat_df,
+  };
   return pickResult;
 }
 
@@ -350,7 +363,8 @@ export const playerUpgrade = async (req, res, next) => {
 
     //랜덤 값 생성(1~100)
     const randomNum = Math.floor(Math.random() * 100) + 1;
-    let check = false;
+    let check = false,
+      strengtheningCard;
     if (randomNum < probability(upgrade_player.enhance_figure)) {
       playersArray = playersArray.filter(
         (player) => player.id != upgrade_player_id
@@ -366,6 +380,18 @@ export const playerUpgrade = async (req, res, next) => {
       const condition = 100;
       const { player_unique_id, name } = upgradeSuccessPlayer;
       const pickResult = { id, player_unique_id, name, condition };
+      const playerCard = await playerPrisma.players.findFirst({
+        where: {
+          player_unique_id,
+        },
+      });
+      strengtheningCard = {
+        id,
+        name,
+        stat_fw: playerCard.stat_fw,
+        stat_mf: playerCard.stat_mf,
+        stat_df: playerCard.stat_df,
+      };
       playersArray.push(pickResult);
       check = true;
     }
@@ -384,7 +410,7 @@ export const playerUpgrade = async (req, res, next) => {
     });
 
     if (check === true) {
-      return res.status(200).json({ message: '강화 성공' });
+      return res.status(200).json({ message: '강화 성공', strengtheningCard });
     }
     return res.status(200).json({ message: '강화 실패' });
   } catch (err) {
