@@ -1,9 +1,9 @@
 import express from 'express';
-import authMiddleware from '../middlewares/auth.middleware.js';
+import { recordsCheck, detailRecord } from '../controllers/match.cndtroller.js';
 
 const matchRouter = express.Router();
 
-matchRouter.get('/:director', );
-
+matchRouter.get('/', recordsCheck);
+matchRouter.get('/:director', detailRecord);
 
 export default matchRouter;
