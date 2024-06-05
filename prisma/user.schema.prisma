@@ -28,6 +28,7 @@ model teams {
     win               Int      @default(0) @map("win")
     draw              Int      @default(0) @map("draw")
     lose              Int      @default(0) @map("lose")
+    in_a_row          Int      @default(0) @map("in_a_row")
     budget            budget?
     account           accounts @relation(fields: [User_id], references: [user_id], onDelete: Cascade)
 
