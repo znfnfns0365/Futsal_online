@@ -22,7 +22,7 @@ export const createDirector = async (req, res) => {
     //동일한 director 이름 검사
     const sameName = await Teams.findFirst({
       // 동일한 director가 User에게 있는지 찾음
-      where: { director},
+      where: { director },
     });
     if (sameName) {
       // 있다면 에러 메시지 전송
@@ -248,7 +248,6 @@ export const cashCarge = async (req, res) => {
       .status(500)
       .json({ message: '캐시 충전 중 오류가 발생했습니다.' });
   }
-
 };
 
 /* 팀의 선발 선수 체크 API */
@@ -405,7 +404,6 @@ export const changeTeamPlayer = async (req, res) => {
 
     const result = await userPrisma.$transaction(async (tx) => {
       //스쿼드에 넣으려고 하는 포지션에 선수가 있는가?
-
 
       //선수가 있는경우 -> 그 선수를 다시 락커룸으로 보내고 새로운 선수를 할당
       if (squad[position]) {
