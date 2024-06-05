@@ -34,7 +34,7 @@ export const createDirector = async (req, res) => {
     //동일한 팀 이름(name) 검사
     const sameTeam = await Teams.findFirst({
       // 동일한 director가 User에게 있는지 찾음
-      where: { name, User_Id: user.user_Id },
+      where: { name },
     });
     if (sameTeam) {
       // 있다면 에러 메시지 전송
@@ -268,9 +268,9 @@ export const checkDirectorTeam = async (req, res) => {
 
     // 만약 director가 같은 팀이 없다면 오류 출력
     if (!team) {
-      return res
-        .status(404)
-        .json({ errorMessage: `${director} 감독은 존재하지 않습니다.` });
+      return res.status(404).json({
+        errorMessage: `${director} 감독은 존재하지 않습니다.`,
+      });
     }
 
     // 팀에 있는 squad에 각 포지션에 선수가 있는지 체크
@@ -472,8 +472,8 @@ export const ranking = async (req, res) => {
     }
     return res.status(200).json({ result });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ errorMessage: error.message + 'rating 기능에서 오류 발생' });
+    return res.status(500).json({
+      errorMessage: error.message + 'rating 기능에서 오류 발생',
+    });
   }
 };
