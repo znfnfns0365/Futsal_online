@@ -54,9 +54,9 @@ export const gacha = async (req, res) => {
     //0. 감독명이 URL을 통해 잘 전달되었는지,전달된 감독명이 DB에 존재하는지 검사한다
     const { director } = req.params;
     if (!director) {
-      res
-        .status(401)
-        .json({ message: '감독명이 URL을 통해 전달되지 않았습니다' });
+      res.status(401).json({
+        message: '감독명이 URL을 통해 전달되지 않았습니다',
+      });
     }
     const team = await userPrisma.teams.findFirst({
       where: {
@@ -64,9 +64,9 @@ export const gacha = async (req, res) => {
       },
     });
     if (!team) {
-      return res
-        .status(404)
-        .json({ message: '해당 감독 이름으로 생성된 팀을 찾을 수 없습니다' });
+      return res.status(404).json({
+        message: '해당 감독 이름으로 생성된 팀을 찾을 수 없습니다',
+      });
     }
 
     //1.로그인 미들웨어를 통과한 user_id와 parms로 받아온 teams 테이블의 감독명이 관계가 있는지 검사한다
@@ -87,9 +87,9 @@ export const gacha = async (req, res) => {
 
     //3.buget에 이상이 있는지,돈이 있는지 확인한다
     if (!budget) {
-      return res
-        .status(404)
-        .json({ message: '해당 팀의 소지금 테이블이 존재하지 않습니다' });
+      return res.status(404).json({
+        message: '해당 팀의 소지금 테이블이 존재하지 않습니다',
+      });
     }
     if (budget.money < 1000) {
       return res
@@ -125,8 +125,6 @@ export const gacha = async (req, res) => {
         playersArray = playersArray.flat(Infinity); // 재귀적으로 배열을 평탄화 (원래는 2중배열임)
         playersArray.push(playerData); //새로 추가된 값을 1차 배열에 추가
       }
-
-      console.log(JSON.stringify(playersArray, null, 2));
 
       await tx.teams.update({
         where: {
@@ -219,7 +217,7 @@ export const myPlayerInfo = async (req, res, next) => {
 
   //해당 캐릭터의 선수 상세 조회
   if (playerId.director === nowDirector.director && playerInArray) {
-    const playerInfo = await playerPrisma.players.findMany({
+    const playerInfo = await playerPrisma.players.findFirst({
       where: {
         player_unique_id: +playerId.player_unique_id,
       },
