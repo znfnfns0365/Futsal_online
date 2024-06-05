@@ -52,5 +52,5 @@ export async function checkPassword(user, password) {
  * 반환값은 배열로 전달되며 배열메서드를 사용하면 원하는 값을 쉽게 얻을 수 있습니다.
  */
 export async function playerLoad() {
-  return playerPrisma.players.findMany({});
+  return await playerPrisma.players.findMany({});
 }
