@@ -22,7 +22,7 @@ export const createDirector = async (req, res) => {
     //동일한 director 이름 검사
     const sameName = await Teams.findFirst({
       // 동일한 director가 User에게 있는지 찾음
-      where: { director, User_Id: user.user_Id },
+      where: { director},
     });
     if (sameName) {
       // 있다면 에러 메시지 전송
