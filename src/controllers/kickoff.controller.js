@@ -318,7 +318,7 @@ async function updateRecords(myTeam, opposingTeam, result) {
     },
   });
   // 승리시 db 추가
-  if (result[0] > result[1]) {
+  if (result.myTeamScore > result.opposingTeamScore) {
     await Teams.update({
       data: {
         win: myTeam.win + 1,
@@ -337,7 +337,7 @@ async function updateRecords(myTeam, opposingTeam, result) {
     });
   }
   // 패배시 db 추가
-  else if (result[0] < result[1]) {
+  else if (result.myTeamScore < result.opposingTeamScore) {
     await Teams.update({
       data: {
         win: opposingTeam.win + 1,
