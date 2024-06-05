@@ -1,10 +1,12 @@
 import jwt from 'jsonwebtoken';
-import express from 'express';
+import express, { json } from 'express';
 import dotenv from 'dotenv';
 import Joi from 'joi';
 import bcrypt from 'bcrypt';
 import { userPrisma, playerPrisma } from '../utils/prisma/index.js';
+
 import { playerLoad } from '../utils/coffee.js';
+import { gacha } from './player.controller.js'; // 감독 생성시 선수 3명을 자동 지급하기 위해서
 
 const player_info = await playerLoad(); //players 원본데이터를 인메모리 방식으로 미리 저장
 const Teams = userPrisma.teams;
@@ -13,53 +15,77 @@ const positionVali = ['df', 'fw', 'mf'];
 
 /* 감독 생성 API */
 export const createDirector = async (req, res) => {
-  const { director, name } = req.body;
-  const user = req.user;
+  try {
+    const { director, name } = req.body;
+    const user = req.user;
 
-  //동일한 director 이름 검사
-  const sameName = await Teams.findFirst({
-    // 동일한 director가 User에게 있는지 찾음
-    where: { director },
-  });
-  if (sameName) {
-    // 있다면 에러 메시지 전송
-    return res
-      .status(400)
-      .json({ errorMessage: '동일한 이름을 가진 감독이 존재합니다' });
-  }
+    //동일한 director 이름 검사
+    const sameName = await Teams.findFirst({
+      // 동일한 director가 User에게 있는지 찾음
+      where: { director, User_Id: user.user_Id },
+    });
+    if (sameName) {
+      // 있다면 에러 메시지 전송
+      return res
+        .status(400)
+        .json({ errorMessage: '동일한 이름을 가진 감독이 존재합니다' });
+    }
 
-  //동일한 팀 이름(name) 검사
-  const sameTeam = await Teams.findFirst({
-    // 동일한 director가 User에게 있는지 찾음
-    where: { name },
-  });
-  if (sameTeam) {
-    // 있다면 에러 메시지 전송
-    return res
-      .status(400)
-      .json({ errorMessage: '동일한 이름을 가진 팀이 존재합니다' });
-  }
+    //동일한 팀 이름(name) 검사
+    const sameTeam = await Teams.findFirst({
+      // 동일한 director가 User에게 있는지 찾음
+      where: { name, User_Id: user.user_Id },
+    });
+    if (sameTeam) {
+      // 있다면 에러 메시지 전송
+      return res
+        .status(400)
+        .json({ errorMessage: '동일한 이름을 가진 팀이 존재합니다' });
+    }
 
-  const newTeam = await Teams.create({
-    // 팀 추가
-    data: {
-      director,
-      User_id: user.user_id,
-      name,
-      candidate_players: {},
-      squad: {
-        fw: false,
-        mf: false,
-        df: false,
+    const newTeam = await Teams.create({
+      // 팀 추가
+      data: {
+        director,
+        User_id: user.user_id,
+        name,
+        candidate_players: {},
+        squad: {
+          fw: false,
+          mf: false,
+          df: false,
+        },
       },
-    },
-  });
-  await Budget.create({
-    data: {
-      Director: newTeam.director,
-    },
-  });
-  return res.status(201).json({ newTeam });
+    });
+    await Budget.create({
+      data: {
+        Director: newTeam.director,
+      },
+    });
+    //3명의 새 선수 지급 다만 무료로 주는건 아니고 자동으로 뽑음...
+    const freeGacha = [];
+    for (let i = 0; i < 3; i++) {
+      console.log(i + '번째 실행중@@@@@@');
+      await fetch(`http://localhost:3001/api/store/gacha/${director}`, {
+        //URL은 추후 변경할 예정
+        method: 'POST',
+        headers: {
+          Authorization: req.token, //토큰값을 넣어줘야함
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          freeGacha.push(data);
+        })
+        .catch((error) => {
+          console.log('Error:', error);
+        });
+    }
+
+    return res.status(201).json({ newTeam, ...freeGacha });
+  } catch (error) {
+    return res.status(500).json({ errorMessage: error.message });
+  }
 };
 
 /* 감독 조회 API */
@@ -212,7 +238,6 @@ export const cashCarge = async (req, res) => {
       where: { Director },
       select: { money: true },
     });
-
     return res.status(200).json({
       message: '캐시가 충전되었습니다.',
       money: updatedBudget.money,
@@ -223,6 +248,7 @@ export const cashCarge = async (req, res) => {
       .status(500)
       .json({ message: '캐시 충전 중 오류가 발생했습니다.' });
   }
+
 };
 
 /* 팀의 선발 선수 체크 API */
@@ -316,7 +342,6 @@ export const changeTeamPlayer = async (req, res) => {
     const { id } = req.body; // req.body로 position과 id 가져오기
     let { position } = req.body;
     const user = req.user;
-
     // 포지션의 대문자 값을 소문자로 변경
     position = position.toLowerCase();
 
@@ -380,6 +405,7 @@ export const changeTeamPlayer = async (req, res) => {
 
     const result = await userPrisma.$transaction(async (tx) => {
       //스쿼드에 넣으려고 하는 포지션에 선수가 있는가?
+
 
       //선수가 있는경우 -> 그 선수를 다시 락커룸으로 보내고 새로운 선수를 할당
       if (squad[position]) {
