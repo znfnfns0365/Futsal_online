@@ -22,7 +22,7 @@ export const createDirector = async (req, res) => {
     //동일한 director 이름 검사
     const sameName = await Teams.findFirst({
       // 동일한 director가 User에게 있는지 찾음
-      where: { director},
+      where: { director },
     });
     if (sameName) {
       // 있다면 에러 메시지 전송
@@ -34,7 +34,7 @@ export const createDirector = async (req, res) => {
     //동일한 팀 이름(name) 검사
     const sameTeam = await Teams.findFirst({
       // 동일한 director가 User에게 있는지 찾음
-      where: { name, User_Id: user.user_Id },
+      where: { name },
     });
     if (sameTeam) {
       // 있다면 에러 메시지 전송
@@ -248,7 +248,6 @@ export const cashCarge = async (req, res) => {
       .status(500)
       .json({ message: '캐시 충전 중 오류가 발생했습니다.' });
   }
-
 };
 
 /* 팀의 선발 선수 체크 API */
@@ -269,9 +268,9 @@ export const checkDirectorTeam = async (req, res) => {
 
     // 만약 director가 같은 팀이 없다면 오류 출력
     if (!team) {
-      return res
-        .status(404)
-        .json({ errorMessage: `${director} 감독은 존재하지 않습니다.` });
+      return res.status(404).json({
+        errorMessage: `${director} 감독은 존재하지 않습니다.`,
+      });
     }
 
     // 팀에 있는 squad에 각 포지션에 선수가 있는지 체크
@@ -406,7 +405,6 @@ export const changeTeamPlayer = async (req, res) => {
     const result = await userPrisma.$transaction(async (tx) => {
       //스쿼드에 넣으려고 하는 포지션에 선수가 있는가?
 
-
       //선수가 있는경우 -> 그 선수를 다시 락커룸으로 보내고 새로운 선수를 할당
       if (squad[position]) {
         CandidatePlayers.candidate_players.push(squad[position]); // 스쿼드에 있는 선수 -> 락커룸
@@ -474,8 +472,8 @@ export const ranking = async (req, res) => {
     }
     return res.status(200).json({ result });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ errorMessage: error.message + 'rating 기능에서 오류 발생' });
+    return res.status(500).json({
+      errorMessage: error.message + 'rating 기능에서 오류 발생',
+    });
   }
 };

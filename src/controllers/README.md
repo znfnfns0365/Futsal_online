@@ -44,7 +44,7 @@ export const createAccount = async (req, res) => {
       .json({ errorMessage: '계정생성에 문제가 발생했습니다' + error.message });
   }
 };
-}
+
 
 
 ```
