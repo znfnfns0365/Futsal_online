@@ -13,4 +13,7 @@ export default [
             'no-unused-vars': 'warn',
         },
     },
+    {
+        "parser": "babel-parser"
+      },
 ];

@@ -9,6 +9,7 @@ const Teams = userPrisma.teams;
 const Matches = matchPrisma.matches;
 const Players = playerPrisma.players;
 
+// 수동 킥오프
 export const kickoff = async (req, res) => {
   const { director, opposingDirector } = req.params;
 
@@ -20,9 +21,9 @@ export const kickoff = async (req, res) => {
     },
   });
   if (!myTeam) {
-    return res
-      .status(400)
-      .json({ errorMessage: '본인의 계정에 존재하지 않는 감독명입니다.' });
+    return res.status(400).json({
+      errorMessage: '본인의 계정에 존재하지 않는 감독명입니다.',
+    });
   }
 
   // 상대 팀 감독이 존재하는지, 자신의 팀과 붙는 지 확인
@@ -42,6 +43,8 @@ export const kickoff = async (req, res) => {
   }
 
   const result = await gaming(myTeam, opposingTeam);
+
+  // 빈 포지션이 있을 때 (경기 불가)
   if (result === 'team1') {
     return res
       .status(400)
@@ -81,6 +84,7 @@ export const kickoff = async (req, res) => {
       mySquad: result.mySquad,
       opposingSquad: result.opposingSquad,
       myRecord: `${newMyTeam.win}승 ${newMyTeam.draw}무 ${newMyTeam.lose}패`,
+      myRating: `${newMyTeam.rating}점 (+${newMyTeam.rating - myTeam.rating})`,
     });
 
   // 무승부가 아닐 경우 결과 출력
@@ -92,10 +96,16 @@ export const kickoff = async (req, res) => {
     }`,
     mySquad: result.mySquad,
     opposingSquad: result.opposingSquad,
-    myRecord: `${newMyTeam.win}승 ${newMyTeam.draw}무 ${newMyTeam.lose}패`,
+    myRecord: `${newMyTeam.win}승 ${newMyTeam.draw}무 ${newMyTeam.lose}패 (${
+      newMyTeam.in_a_row > 0 ? newMyTeam.in_a_row : -newMyTeam.in_a_row
+    }${newMyTeam.in_a_row > 0 ? '연승중' : '연패중'})`,
+    myRating: `${newMyTeam.rating}점 (${
+      newMyTeam.rating - myTeam.rating > 0 ? '+' : ''
+    }${newMyTeam.rating - myTeam.rating})`,
   });
 };
 
+// 자동 매치 메이킹 킥오프
 export const automaticKickoff = async (req, res) => {
   const { director } = req.params;
 
@@ -107,13 +117,13 @@ export const automaticKickoff = async (req, res) => {
     },
   });
   if (!myTeam) {
-    return res
-      .status(400)
-      .json({ errorMessage: '본인의 계정에 존재하지 않는 감독명입니다.' });
+    return res.status(400).json({
+      errorMessage: '본인의 계정에 존재하지 않는 감독명입니다.',
+    });
   }
 
-  const opposingTeam = 0; // 자동매치메이킹함수(myTeam)
-  const opposingDirector = opposingTeam;
+  const opposingTeam = await autoMatchMaking(myTeam); // 자동매치메이킹함수(myTeam)
+  const opposingDirector = opposingTeam.director;
 
   const result = await gaming(myTeam, opposingTeam);
 
@@ -156,6 +166,7 @@ export const automaticKickoff = async (req, res) => {
       mySquad: result.mySquad,
       opposingSquad: result.opposingSquad,
       myRecord: `${newMyTeam.win}승 ${newMyTeam.draw}무 ${newMyTeam.lose}패`,
+      myRating: `${newMyTeam.rating}점 (+${newMyTeam.rating - myTeam.rating})`,
     });
 
   // 무승부가 아닐 경우 결과 출력
@@ -167,7 +178,12 @@ export const automaticKickoff = async (req, res) => {
     }`,
     mySquad: result.mySquad,
     opposingSquad: result.opposingSquad,
-    myRecord: `${newMyTeam.win}승 ${newMyTeam.draw}무 ${newMyTeam.lose}패`,
+    myRecord: `${newMyTeam.win}승 ${newMyTeam.draw}무 ${newMyTeam.lose}패 (${
+      newMyTeam.in_a_row
+    }${newMyTeam.in_a_row > 0 ? '연승중' : '연패중'})`,
+    myRating: `${newMyTeam.rating}점 (${
+      newMyTeam.rating - myTeam.rating > 0 ? '+' : ''
+    }${newMyTeam.rating - myTeam.rating})`,
   });
 };
 
@@ -317,11 +333,42 @@ async function updateRecords(myTeam, opposingTeam, result) {
       score_player2: result.opposingTeamScore,
     },
   });
+  // rating 변경 사항 설정
+  // 기본 10점에 상대방과 점수차에 따라서 100점 차이마다 +- 1점, 차이가 많이 나더라도 최소 5점 증액 or 차감 가능
+  const ratingGap = (myRating, opposingRating) => {
+    if (myRating - opposingRating > 99) {
+      return -Math.min(5, Math.floor((myRating - opposingRating) / 100));
+    } else if (opposingRating - myRating > 99) {
+      return Math.min(5, Math.floor((opposingRating - myRating) / 100));
+    } else {
+      return 0;
+    }
+  };
+  const myWinRatingChange = 10 + ratingGap(myTeam.rating, opposingTeam.rating),
+    opposingWinRatingChange =
+      10 + ratingGap(opposingTeam.rating, myTeam.rating);
+  // 연승, 연패 시 횟수 - 1 만큼 rating에 반영 ex) 3연승시 12 point up!, 5연패시 14 point down.., 1연승시 10 point up!
+  let myRow = 0,
+    opposingRow = 0;
   // 승리시 db 추가
   if (result.myTeamScore > result.opposingTeamScore) {
+       // 우리 팀 연승 확인
+    if (myTeam.in_a_row > 0) {
+      myRow = myTeam.in_a_row + 1;
+    } else {
+      myRow = 1;
+    }
+    // 상대팀 연패 확인
+    if (opposingTeam.in_a_row < 0) {
+      opposingRow = opposingTeam.in_a_row - 1;
+    } else {
+      opposingRow = -1;
+    }
     await Teams.update({
       data: {
         win: myTeam.win + 1,
+        rating: myTeam.rating + myWinRatingChange + myRow - 1,
+        in_a_row: myRow,
       },
       where: {
         director: myTeam.director,
@@ -330,6 +377,8 @@ async function updateRecords(myTeam, opposingTeam, result) {
     await Teams.update({
       data: {
         lose: opposingTeam.lose + 1,
+        rating: opposingTeam.rating - myWinRatingChange + opposingRow + 1,
+        in_a_row: opposingRow,
       },
       where: {
         director: opposingTeam.director,
@@ -338,9 +387,23 @@ async function updateRecords(myTeam, opposingTeam, result) {
   }
   // 패배시 db 추가
   else if (result.myTeamScore < result.opposingTeamScore) {
+    // 우리 팀 연패 확인
+    if (myTeam.in_a_row < 0) {
+      myRow = myTeam.in_a_row - 1;
+    } else {
+      myRow = -1;
+    }
+    // 상대팀 연승 확인
+    if (opposingTeam.in_a_row > 0) {
+      opposingRow = opposingTeam.in_a_row + 1;
+    } else {
+      opposingRow = 1;
+    }
     await Teams.update({
       data: {
         win: opposingTeam.win + 1,
+        rating: opposingTeam.rating + opposingWinRatingChange + opposingRow - 1,
+        in_a_row: opposingRow,
       },
       where: {
         director: opposingTeam.director,
@@ -349,17 +412,20 @@ async function updateRecords(myTeam, opposingTeam, result) {
     await Teams.update({
       data: {
         lose: myTeam.lose + 1,
+        rating: myTeam.rating - opposingWinRatingChange + myRow + 1,
+        in_a_row: myRow,
       },
       where: {
         director: myTeam.director,
       },
     });
   }
-  // 무승부시 db 추가 및 출력
+  // 무승부시 db 추가
   else {
     await Teams.update({
       data: {
         draw: opposingTeam.draw + 1,
+        in_a_row: opposingRow,
       },
       where: {
         director: opposingTeam.director,
@@ -368,10 +434,47 @@ async function updateRecords(myTeam, opposingTeam, result) {
     await Teams.update({
       data: {
         draw: myTeam.draw + 1,
+        in_a_row: myRow,
       },
       where: {
         director: myTeam.director,
       },
     });
+  }
+}
+
+// 자동 매치메이킹 함수
+async function autoMatchMaking(myTeam) {
+  let ratingDiffer = [];
+  let opposingTeam = await Teams.findMany({});
+  // 나, 유저의 감독들을 제외하고 squad가 장착되어있는 감독들 모두 불러오기
+  opposingTeam = opposingTeam.filter(function (val) {
+    return (
+      val.squad.df &&
+      val.squad.mf &&
+      val.squad.fw &&
+      val.director !== myTeam.director &&
+      val.User_id !== myTeam.User_id
+    );
+  });
+  // 내 rating과 차이를 기준으로 오름차순 정렬
+  for (let val of opposingTeam) {
+    ratingDiffer.push({
+      differ: myTeam.rating - val.rating,
+      director: val.director,
+    });
+  }
+  ratingDiffer.sort((a, b) => {
+    return Math.abs(a.differ) - Math.abs(b.differ);
+  });
+
+  // 나와 차이가 가장 적은 3명의 감독중 한 팀과 랜덤하게 매치 메이킹
+  let randomDirector =
+    ratingDiffer[Math.floor(Math.random() * Math.min(3, ratingDiffer.length))]
+      .director;
+  for (let val of opposingTeam) {
+    if (randomDirector === val.director) {
+      return val;
+    }
   }
 }
