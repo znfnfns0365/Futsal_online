@@ -126,8 +126,6 @@ export const gacha = async (req, res) => {
         playersArray.push(playerData); //새로 추가된 값을 1차 배열에 추가
       }
 
-      console.log(JSON.stringify(playersArray, null, 2));
-
       await tx.teams.update({
         where: {
           director: director,
