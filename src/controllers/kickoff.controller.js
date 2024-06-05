@@ -9,6 +9,7 @@ const Teams = userPrisma.teams;
 const Matches = matchPrisma.matches;
 const Players = playerPrisma.players;
 
+// 수동 킥오프
 export const kickoff = async (req, res) => {
   const { director, opposingDirector } = req.params;
 
@@ -42,6 +43,8 @@ export const kickoff = async (req, res) => {
   }
 
   const result = await gaming(myTeam, opposingTeam);
+
+  // 빈 포지션이 있을 때 (경기 불가)
   if (result === 'team1') {
     return res
       .status(400)
@@ -102,6 +105,7 @@ export const kickoff = async (req, res) => {
   });
 };
 
+// 자동 매치 메이킹 킥오프
 export const automaticKickoff = async (req, res) => {
   const { director } = req.params;
 
@@ -118,8 +122,8 @@ export const automaticKickoff = async (req, res) => {
     });
   }
 
-  const opposingTeam = 0; // 자동매치메이킹함수(myTeam)
-  const opposingDirector = opposingTeam;
+  const opposingTeam = await autoMatchMaking(myTeam); // 자동매치메이킹함수(myTeam)
+  const opposingDirector = opposingTeam.director;
 
   const result = await gaming(myTeam, opposingTeam);
 
@@ -436,5 +440,41 @@ async function updateRecords(myTeam, opposingTeam, result) {
         director: myTeam.director,
       },
     });
+  }
+}
+
+// 자동 매치메이킹 함수
+async function autoMatchMaking(myTeam) {
+  let ratingDiffer = [];
+  let opposingTeam = await Teams.findMany({});
+  // 나, 유저의 감독들을 제외하고 squad가 장착되어있는 감독들 모두 불러오기
+  opposingTeam = opposingTeam.filter(function (val) {
+    return (
+      val.squad.df &&
+      val.squad.mf &&
+      val.squad.fw &&
+      val.director !== myTeam.director &&
+      val.User_id !== myTeam.User_id
+    );
+  });
+  // 내 rating과 차이를 기준으로 오름차순 정렬
+  for (let val of opposingTeam) {
+    ratingDiffer.push({
+      differ: myTeam.rating - val.rating,
+      director: val.director,
+    });
+  }
+  ratingDiffer.sort((a, b) => {
+    return Math.abs(a.differ) - Math.abs(b.differ);
+  });
+
+  // 나와 차이가 가장 적은 3명의 감독중 한 팀과 랜덤하게 매치 메이킹
+  let randomDirector =
+    ratingDiffer[Math.floor(Math.random() * Math.min(3, ratingDiffer.length))]
+      .director;
+  for (let val of opposingTeam) {
+    if (randomDirector === val.director) {
+      return val;
+    }
   }
 }
