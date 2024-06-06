@@ -100,4 +100,3 @@ export const signUp = async (req, res, next) => {
     return res.status(400).json({ errorMessage: err.message });
   }
 };
-

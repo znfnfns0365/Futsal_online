@@ -24,5 +24,5 @@ app.use('/api/matches', matchRouter);
 
 
 app.listen(PORT, () => {
-  console.log('서버가 3001 포트에서 열렸습니다');
+    console.log('서버가 3001 포트에서 열렸습니다');
 });

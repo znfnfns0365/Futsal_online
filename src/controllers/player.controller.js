@@ -168,7 +168,8 @@ async function pickPlayer() {
     const randomIndex = Math.floor(Math.random() * players.length);
     return players[randomIndex];
     */
-  const id = Math.floor(100000 + Math.random() * 900000);
+  const DAY = new Date();
+  const id = DAY.getTime();
   const condition = 100;
   const randomIndex = Math.floor(Math.random() * players.length);
   const { player_unique_id, name } = players[randomIndex];
@@ -311,15 +312,14 @@ export const playerUpgrade = async (req, res, next) => {
     }
 
     //해당 감독 인벤토리 찾기
-    const CandidatePlayers = await userPrisma.teams.findMany({
+    const CandidatePlayers = await userPrisma.teams.findFirst({
       where: { director },
       select: {
         candidate_players: true,
       },
     });
-    let playersArray = [];
-    playersArray.push(CandidatePlayers[0].candidate_players);
-    playersArray = playersArray.flat(Infinity);
+
+    let playersArray = CandidatePlayers.candidate_players;
 
     const upgradePlayer = playersArray.find(
       (player) => player.id == upgrade_player_id
@@ -374,7 +374,7 @@ export const playerUpgrade = async (req, res, next) => {
           enhance_figure: upgrade_player.enhance_figure + 1,
         },
       });
-      const id = Math.floor(100000 + Math.random() * 900000);
+      const id = upgrade_player_id;
       const condition = 100;
       const { player_unique_id, name } = upgradeSuccessPlayer;
       const pickResult = { id, player_unique_id, name, condition };
