@@ -344,13 +344,11 @@ export const cancelSell = async (req, res) => {
       return storeTransactionResult;
     });
 
-    return res
-      .status(201)
-      .json({
-        messgae:
-          '선수 판매 취소가 완료 되었습니다' +
-          JSON.stringify(userTransactionPromise, null, 2),
-      });
+    return res.status(201).json({
+      messgae:
+        '선수 판매 취소가 완료 되었습니다' +
+        JSON.stringify(userTransactionPromise, null, 2),
+    });
   } catch (error) {
     return res
       .status(500)
