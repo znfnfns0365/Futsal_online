@@ -442,6 +442,5 @@ export const canUpgrade = async (req, res, next) => {
       answer[key] = obj[key];
     }
   }
-  console.log(answer);
   return res.status(200).json(answer);
 };
