@@ -98,7 +98,9 @@ export const sellPlayer = async (req, res) => {
     ]);
 
     return res.status(201).json({
-      message: '판매 등록이 성공적으로 이루어졌습니다' +JSON.stringify(storeTransaction, null, 2),
+      message:
+        '판매 등록이 성공적으로 이루어졌습니다' +
+        JSON.stringify(storeTransaction, null, 2),
     });
   } catch (error) {
     return res.status(500).json({ error: error + '--판매 트랜잭션 오류' });

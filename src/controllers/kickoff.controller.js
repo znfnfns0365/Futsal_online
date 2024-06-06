@@ -59,8 +59,11 @@ export const kickoff = async (req, res) => {
   console.log('경기중!');
   await delay(1000);
 
-  // 매치 정보, 결과 업데이트  함수 호출
+  // 매치 정보, 결과 업데이트 함수 호출
   await updateRecords(myTeam, opposingTeam, result);
+
+  // 경기 결과에 따른 컨디션 감소, 후보 선수 컨디션 증가 함수 호출
+  await conditionChange(myTeam, opposingTeam, result);
 
   //매치 정보 업데이트를 위한 newMyTeam, newOpposingTeam
   const newMyTeam = await Teams.findFirst({
@@ -141,8 +144,12 @@ export const automaticKickoff = async (req, res) => {
   // 경기 가능
   console.log('경기중!');
   await delay(1000);
+
   // 매치 정보, 결과 업데이트  함수 호출
   await updateRecords(myTeam, opposingTeam, result);
+
+  // 경기 결과에 따른 컨디션 감소, 후보 선수 컨디션 증가 함수 호출
+  await conditionChange(myTeam, opposingTeam, result);
 
   //매치 정보 업데이트를 위한 newMyTeam, newOpposingTeam
   const newMyTeam = await Teams.findFirst({
@@ -441,6 +448,96 @@ async function updateRecords(myTeam, opposingTeam, result) {
       },
     });
   }
+}
+
+// 컨디션 증가, 감소 함수
+async function conditionChange(myTeam, opposingTeam, result) {
+  // 후보 선수 컨디션 1~10중 랜덤하게 증가
+  let my_candidate_players = myTeam.candidate_players,
+    opposing_candidate_players = opposingTeam.candidate_players;
+
+  // 빈 객체면 for..of가 안 돌아가서 예외처리
+  if (Array.isArray(my_candidate_players))
+    for (let val of my_candidate_players) {
+      val.condition += Math.floor(Math.random() * 10) + 1;
+      if (val.condition > 100) val.condition = 100;
+    }
+  if (Array.isArray(opposing_candidate_players))
+    for (let val of opposing_candidate_players) {
+      val.condition += Math.floor(Math.random() * 10) + 1;
+      if (val.condition > 100) val.condition = 100;
+    }
+
+  let mySquad = myTeam.squad,
+    opposingSquad = opposingTeam.squad;
+
+  // myTeam 선수들 승리로 0~5중 랜덤하게 감소, opposingTeam 선수들 패배로 5~10중 랜덤하게 감소
+  if (result.myTeamScore > result.opposingTeamScore) {
+    mySquad.fw.condition -= Math.floor(Math.random() * 6);
+    if (mySquad.fw.condition < 0) mySquad.fw.condition = 0;
+    mySquad.mf.condition -= Math.floor(Math.random() * 6);
+    if (mySquad.mf.condition < 0) mySquad.mf.condition = 0;
+    mySquad.df.condition -= Math.floor(Math.random() * 6);
+    if (mySquad.df.condition < 0) mySquad.df.condition = 0;
+    opposingSquad.fw.condition -= Math.floor(Math.random() * 6) + 5;
+    if (opposingSquad.fw.condition < 0) opposingSquad.fw.condition = 0;
+    opposingSquad.mf.condition -= Math.floor(Math.random() * 6) + 5;
+    if (opposingSquad.mf.condition < 0) opposingSquad.mf.condition = 0;
+    opposingSquad.df.condition -= Math.floor(Math.random() * 6) + 5;
+    if (opposingSquad.df.condition < 0) opposingSquad.df.condition = 0;
+  }
+
+  // myTeam 선수들 패배로 5~10중 랜덤하게 감소, opposingTeam 선수들 승리로 0~5중 랜덤하게 감소
+  else if (result.myTeamScore < result.opposingTeamScore) {
+    mySquad.fw.condition -= Math.floor(Math.random() * 6) + 5;
+    if (mySquad.fw.condition < 0) mySquad.fw.condition = 0;
+    mySquad.mf.condition -= Math.floor(Math.random() * 6) + 5;
+    if (mySquad.mf.condition < 0) mySquad.mf.condition = 0;
+    mySquad.df.condition -= Math.floor(Math.random() * 6) + 5;
+    if (mySquad.df.condition < 0) mySquad.df.condition = 0;
+    opposingSquad.fw.condition -= Math.floor(Math.random() * 6);
+    if (opposingSquad.fw.condition < 0) opposingSquad.fw.condition = 0;
+    opposingSquad.mf.condition -= Math.floor(Math.random() * 6);
+    if (opposingSquad.mf.condition < 0) opposingSquad.mf.condition = 0;
+    opposingSquad.df.condition -= Math.floor(Math.random() * 6);
+    if (opposingSquad.df.condition < 0) opposingSquad.df.condition = 0;
+  }
+
+  // myTeam, opposingTeam 선수들 무승부로 1~10중 랜덤하게 감소
+  else {
+    mySquad.fw.condition -= Math.floor(Math.random() * 10) + 1;
+    if (mySquad.fw.condition < 0) mySquad.fw.condition = 0;
+    mySquad.mf.condition -= Math.floor(Math.random() * 10) + 1;
+    if (mySquad.mf.condition < 0) mySquad.mf.condition = 0;
+    mySquad.df.condition -= Math.floor(Math.random() * 10) + 1;
+    if (mySquad.df.condition < 0) mySquad.df.condition = 0;
+    opposingSquad.fw.condition -= Math.floor(Math.random() * 10) + 1;
+    if (opposingSquad.fw.condition < 0) opposingSquad.fw.condition = 0;
+    opposingSquad.mf.condition -= Math.floor(Math.random() * 10) + 1;
+    if (opposingSquad.mf.condition < 0) opposingSquad.mf.condition = 0;
+    opposingSquad.df.condition -= Math.floor(Math.random() * 10) + 1;
+    if (opposingSquad.df.condition < 0) opposingSquad.df.condition = 0;
+  }
+
+  // Teams db에 업데이트
+  await Teams.update({
+    where: {
+      director: myTeam.director,
+    },
+    data: {
+      candidate_players: my_candidate_players,
+      squad: mySquad,
+    },
+  });
+  await Teams.update({
+    where: {
+      director: opposingTeam.director,
+    },
+    data: {
+      candidate_players: opposing_candidate_players,
+      squad: opposingSquad,
+    },
+  });
 }
 
 // 자동 매치메이킹 함수
