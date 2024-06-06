@@ -22,3 +22,13 @@ model store {
 
   @@map("store")
 }
+
+model sales_records{
+  id             Int @id @default(autoincrement())
+  name           String @map("name")
+  player_unique_id Int@map("player_unique_id")
+  price          Int@map("price")
+  created_at     DateTime @default(now()) @map("created_at")
+
+  @@map("sales_records")
+}
