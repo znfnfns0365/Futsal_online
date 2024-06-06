@@ -65,6 +65,9 @@ export const kickoff = async (req, res) => {
   // 경기 결과에 따른 컨디션 감소, 후보 선수 컨디션 증가 함수 호출
   await conditionChange(myTeam, opposingTeam, result);
 
+  // 중계권료 지급
+  const myMoney = await getMoney(myTeam, opposingTeam);
+
   //매치 정보 업데이트를 위한 newMyTeam, newOpposingTeam
   const newMyTeam = await Teams.findFirst({
     where: {
@@ -88,6 +91,7 @@ export const kickoff = async (req, res) => {
       opposingSquad: result.opposingSquad,
       myRecord: `${newMyTeam.win}승 ${newMyTeam.draw}무 ${newMyTeam.lose}패`,
       myRating: `${newMyTeam.rating}점 (+${newMyTeam.rating - myTeam.rating})`,
+      myMoney: `${myMoney.money} *(+1000)`,
     });
 
   // 무승부가 아닐 경우 결과 출력
@@ -105,6 +109,7 @@ export const kickoff = async (req, res) => {
     myRating: `${newMyTeam.rating}점 (${
       newMyTeam.rating - myTeam.rating > 0 ? '+' : ''
     }${newMyTeam.rating - myTeam.rating})`,
+    myMoney: `${myMoney.money} *(+1000)`,
   });
 };
 
@@ -151,6 +156,9 @@ export const automaticKickoff = async (req, res) => {
   // 경기 결과에 따른 컨디션 감소, 후보 선수 컨디션 증가 함수 호출
   await conditionChange(myTeam, opposingTeam, result);
 
+  // 중계권료 지급
+  const myMoney = await getMoney(myTeam, opposingTeam);
+
   //매치 정보 업데이트를 위한 newMyTeam, newOpposingTeam
   const newMyTeam = await Teams.findFirst({
     where: {
@@ -174,6 +182,7 @@ export const automaticKickoff = async (req, res) => {
       opposingSquad: result.opposingSquad,
       myRecord: `${newMyTeam.win}승 ${newMyTeam.draw}무 ${newMyTeam.lose}패`,
       myRating: `${newMyTeam.rating}점 (+${newMyTeam.rating - myTeam.rating})`,
+      myMoney: `${myMoney.money} *(+1000)`,
     });
 
   // 무승부가 아닐 경우 결과 출력
@@ -191,6 +200,7 @@ export const automaticKickoff = async (req, res) => {
     myRating: `${newMyTeam.rating}점 (${
       newMyTeam.rating - myTeam.rating > 0 ? '+' : ''
     }${newMyTeam.rating - myTeam.rating})`,
+    myMoney: `${myMoney.money} *(+1000)`,
   });
 };
 
@@ -574,4 +584,29 @@ async function autoMatchMaking(myTeam) {
       return val;
     }
   }
+}
+
+// 중계권료 지급
+async function getMoney(myTeam, opposingTeam) {
+  const myMoney = await userPrisma.budget.update({
+    where: {
+      Director: myTeam.director,
+    },
+    data: {
+      money: {
+        increment: 1000,
+      },
+    },
+  });
+  await userPrisma.budget.update({
+    where: {
+      Director: opposingTeam.director,
+    },
+    data: {
+      money: {
+        increment: 1000,
+      },
+    },
+  });
+  return myMoney;
 }
