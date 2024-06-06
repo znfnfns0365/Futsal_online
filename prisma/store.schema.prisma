@@ -9,16 +9,26 @@ datasource db {
 }
 
 model store {
-  sell_id        Int      @id @default(autoincrement()) @map("sell_id")
-  seller         String   @map("seller")
-  player_unique_id Int    @map("player_unique_id")
-  id             Int      @unique @map("id")
-  name           String   @map("name")
-  price          Int      @map("price")
-  stat           Json     @map("stat")
-  condition      Int      @map("condition")
-  created_at     DateTime @default(now()) @map("created_at")
-  enhance_figure Int      @map("enhance_figure")
+  sell_id          Int      @id @default(autoincrement()) @map("sell_id")
+  seller           String   @map("seller")
+  player_unique_id Int      @map("player_unique_id")
+  id               Int      @unique @map("id")
+  name             String   @map("name")
+  price            Int      @map("price")
+  stat             Json     @map("stat")
+  condition        Int      @map("condition")
+  created_at       DateTime @default(now()) @map("created_at")
+  enhance_figure   Int      @map("enhance_figure")
 
   @@map("store")
+}
+
+model sales_records{
+  id             Int @id @default(autoincrement())
+  name           String @map("name")
+  player_unique_id Int@map("player_unique_id")
+  price          Int@map("price")
+  created_at     DateTime @default(now()) @map("created_at")
+
+  @@map("sales_records")
 }

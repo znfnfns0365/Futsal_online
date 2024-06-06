@@ -2,12 +2,18 @@ import globals from 'globals';
 import pluginJs from '@eslint/js';
 
 export default [
-  { languageOptions: { globals: globals.node } },
+  {
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
   pluginJs.configs.recommended,
   {
     rules: {
-      'no-unused-vars': 'off',
-      // 'no-unused-vars': 'warn'
+      'no-unused-vars': 'warn',
     },
+  },
+  {
+    parser: 'babel-parser',
   },
 ];
