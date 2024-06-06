@@ -1,5 +1,5 @@
 # Team_Project_3
-
+```
 Team_project_3
 ├── .env
 ├── .gitignore
@@ -44,7 +44,7 @@ Team_project_3
         │   └── index.js
         └── probability
             └── index.js
-
+```
 
 
 # 게임 매치메이킹 및 점수 계산 로직
