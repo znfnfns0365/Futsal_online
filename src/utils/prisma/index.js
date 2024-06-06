@@ -4,18 +4,18 @@ import { PrismaClient as match } from '../../../prisma/generated/client3/index.j
 import { PrismaClient as store } from '../../../prisma/generated/client4/index.js';
 
 export const userPrisma = new user({
-    log: ['query', 'info', 'warn', 'error'],
-    errorFormat: 'pretty',
+  log: ['query', 'info', 'warn', 'error'],
+  errorFormat: 'pretty',
 });
 
 export const playerPrisma = new player({
-    log: ['query', 'info', 'warn', 'error'],
-    errorFormat: 'pretty',
+  log: ['query', 'info', 'warn', 'error'],
+  errorFormat: 'pretty',
 });
 
 export const matchPrisma = new match({
-    log: ['query', 'info', 'warn', 'error'],
-    errorFormat: 'pretty',
+  log: ['query', 'info', 'warn', 'error'],
+  errorFormat: 'pretty',
 });
 
 export const storePrisma = new store({
