@@ -245,7 +245,7 @@ export const buyPlayer = async (req, res, next) => {
       buyPlayerTransactionPromise,
       withdrawDepositPromise,
     ]);
-    //
+    addSalesRecoreds(findPlayer); //판매완료된 선수는 기록에 남는다
     return res.status(200).json({ message: '구매완료', findPlayer });
   } catch (err) {
     return res.status(408).json({ errorMessage: err.message });
@@ -344,16 +344,62 @@ export const cancelSell = async (req, res) => {
       return storeTransactionResult;
     });
 
-    return res
-      .status(201)
-      .json({
-        messgae:
-          '선수 판매 취소가 완료 되었습니다' +
-          JSON.stringify(userTransactionPromise, null, 2),
-      });
+    return res.status(201).json({
+      messgae:
+        '선수 판매 취소가 완료 되었습니다' +
+        JSON.stringify(userTransactionPromise, null, 2),
+    });
   } catch (error) {
     return res
       .status(500)
       .json({ errorMessage: error + '--트랜잭션 과정에서 오류 발생' });
+  }
+};
+
+/**
+ * 거래 내역을 생성하는 함수
+ */
+async function addSalesRecoreds(player) {
+  const { name, player_unique_id, price } = player;
+  await storePrisma.sales_records.create({
+    data: {
+      name,
+      player_unique_id,
+      price,
+    },
+  });
+}
+
+/**
+ * 거래 내역을 조회하는 함수
+ */
+export const saleRecords = async (req, res) => {
+  const records = await storePrisma.sales_records.findMany({});
+  res.status(200).json({ messgae: records });
+};
+
+/**
+ * 특정 카드의 시세를 조회하는 함수
+ */
+
+export const marketPrice = async (req, res) => {
+  try {
+    const { player_unique_id } = req.params;
+    if (!player_unique_id) {
+      return res.status(401).json({ messgae: 'params가 비어있습니다' });
+    }
+    const search = await storePrisma.sales_records.findMany({
+      where: {
+        player_unique_id: +player_unique_id,
+      },
+    });
+    if (search.length==0) {
+      return res
+        .status(404)
+        .json({ messgae: '해당 선수는 판매된 기록이 존재하지 않습니다' });
+    }
+    return res.status(200).json({ message: search });
+  } catch (error) {
+    res.status(500).json({ errorMessage: error.message });
   }
 };
