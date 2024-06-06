@@ -1,5 +1,51 @@
 # Team_Project_3
 
+Team_project_3
+├── .env
+├── .gitignore
+├── .prettierrc
+├── eslint.config.js
+├── package.json
+├── README.md
+├── tree.txt
+├── yarn.lock
+├── prisma
+│   ├── match.schema.prisma
+│   ├── player.schema.prisma
+│   ├── store.schema.prisma
+│   └── user.schema.prisma
+└── src
+    ├── app.js
+    ├── controllers
+    │   ├── account.controller.js
+    │   ├── director.controller.js
+    │   ├── kickoff.controller.js
+    │   ├── match.cndtroller.js
+    │   ├── player.controller.js
+    │   ├── README.md
+    │   ├── squad.controller.js
+    │   └── store.controller.js
+    ├── middlewares
+    │   ├── auth.middleware.js
+    │   ├── error-handling.middlewares.js
+    │   └── README.md
+    ├── routers
+    │   ├── accounts.js
+    │   ├── directors.js
+    │   ├── kickoff.js
+    │   ├── matches.js
+    │   ├── players.js
+    │   ├── README.md
+    │   ├── squads.js
+    │   └── store.js
+    └── utils
+        ├── coffee.js
+        ├── prisma
+        │   └── index.js
+        └── probability
+            └── index.js
+
+
 
 # 게임 매치메이킹 및 점수 계산 로직
 
