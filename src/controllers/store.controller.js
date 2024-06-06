@@ -251,6 +251,7 @@ export const buyPlayer = async (req, res, next) => {
     return res.status(408).json({ errorMessage: err.message });
   }
 };
+
 //선수 판매 취소 기능
 
 export const cancelSell = async (req, res) => {
