@@ -352,7 +352,7 @@ async function updateRecords(myTeam, opposingTeam, result) {
     opposingRow = 0;
   // 승리시 db 추가
   if (result.myTeamScore > result.opposingTeamScore) {
-       // 우리 팀 연승 확인
+    // 우리 팀 연승 확인
     if (myTeam.in_a_row > 0) {
       myRow = myTeam.in_a_row + 1;
     } else {

@@ -22,3 +22,8 @@ export const storePrisma = new store({
   log: ['query', 'info', 'warn', 'error'],
   errorFormat: 'pretty',
 });
+
+export const storePrisma = new store({
+  log: ['query', 'info', 'warn', 'error'],
+  errorFormat: 'pretty',
+});
