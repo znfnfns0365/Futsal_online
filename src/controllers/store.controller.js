@@ -1,4 +1,8 @@
-import { userPrisma, storePrisma } from '../utils/prisma/index.js';
+import {
+  userPrisma,
+  storePrisma,
+  playerPrisma,
+} from '../utils/prisma/index.js';
 import { playerLoad } from '../utils/coffee.js';
 
 const playerDB = await playerLoad();
@@ -107,10 +111,151 @@ export const sellPlayer = async (req, res) => {
   }
 };
 
+//이적시장 매물 조회 API
+export const storeList = async (req, res, next) => {
+  const allList = await storePrisma.store.findMany({
+    select: {
+      player_unique_id: true,
+      id: true,
+      name: true,
+      price: true,
+      stat: true,
+      enhance_figure: true,
+    },
+  });
+  return res.status(200).json(allList);
+};
+
+//선수 구매 API
+export const buyPlayer = async (req, res, next) => {
+  try {
+    //1. 팀의 감독과 사려고하는 선수의 id를 body로 전달
+    const { director, id } = req.body;
+
+    //2. params기준으로 미들웨어 사용자가 감독을 보유하고 있는지
+    const user = req.user;
+    const exsistDirector = await userPrisma.teams.findFirst({
+      where: {
+        director: director,
+        User_id: user.user_id,
+      },
+    });
+    if (!exsistDirector) {
+      return res
+        .status(403)
+        .json({ errorMessage: '본인 소유의 감독이 아닙니다' });
+    }
+    //3. 감독 검증이 완료됐으면 전달받은 id를 바탕으로 이적시장 매물이 있는지 찾는다.
+    const addPlayer = await storePrisma.store.findFirst({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        name: true,
+        condition: true,
+        player_unique_id: true,
+      },
+    });
+
+    const findPlayer = await storePrisma.store.findFirst({
+      where: {
+        id,
+      },
+    });
+    //시장에 id같은 매물이 없다면
+    if (findPlayer === null) {
+      return res
+        .status(405)
+        .json({ message: '구입하려는 선수가 존재하지 않습니다' });
+    }
+    //내 돈 불러오기
+    const myMoney = await userPrisma.budget.findFirst({
+      where: {
+        Director: director,
+      },
+    });
+    if (myMoney.money < findPlayer.price) {
+      return res.status(405).json({ message: '잔액이 부족합니다' });
+    }
+
+    //매물이 있고 잔액도 충분하다면
+    //1.내 캐시 출금 2.상대 캐시 입금 3.이적시장 테이블 삭제
+    //4. 감독 candidate_player에 해당 선수 추가 트랜잭션 사용해야함
+    let seller;
+    const buyPlayerTransactionPromise = storePrisma.$transaction(async (tx) => {
+      // 해당 선수 테이블 삭제
+      const deletePlayerList = await tx.store.delete({
+        where: {
+          id,
+        },
+      });
+      return deletePlayerList;
+    });
+
+    const withdrawDepositPromise = userPrisma.$transaction(async (tx) => {
+      const storeTransactionResult = await buyPlayerTransactionPromise; //트랜잭션을 묶어서 처리하는 꼼수
+      console.log(storeTransactionResult);
+      //내 계좌 출금
+      const withdraw = await tx.budget.update({
+        where: {
+          Director: director,
+        },
+        data: {
+          money: { decrement: findPlayer.price },
+        },
+      });
+
+      //판매자 계좌 입금
+      await tx.budget.update({
+        where: {
+          Director: findPlayer.seller,
+        },
+        data: {
+          money: {
+            increment: findPlayer.price * 0.9,
+          },
+        },
+      });
+
+      const pushPlayer = await tx.teams.findFirst({
+        where: {
+          director,
+        },
+        select: {
+          candidate_players: true,
+        },
+      });
+      pushPlayer.candidate_players.push(addPlayer);
+
+      //구매자 candidate_player에 추가
+      await tx.teams.update({
+        where: {
+          director,
+        },
+        data: {
+          candidate_players: pushPlayer.candidate_players,
+        },
+      });
+
+      return withdraw;
+    });
+
+    const [storeTransaction, userTransaction] = await Promise.all([
+      buyPlayerTransactionPromise,
+      withdrawDepositPromise,
+    ]);
+    //
+    return res.status(200).json({ message: '구매완료', findPlayer });
+  } catch (err) {
+    return res.status(408).json({ errorMessage: err.message });
+  }
+};
+
 //선수 판매 취소 기능
 
 export const cancelSell = async (req, res) => {
-  const  user  = req.user;
+  const user = req.user;
   const { selectId, director } = req.body;
   try {
     //1. body로 입력받은 감독 정보가 미들웨어 정보와 일치하는지 확인
@@ -196,12 +341,16 @@ export const cancelSell = async (req, res) => {
           candidate_players: unSaclaLockerRoom,
         },
       });
-      return storeTransactionResult
+      return storeTransactionResult;
     });
 
     return res
       .status(201)
-      .json({ messgae: '선수 판매 취소가 완료 되었습니다'+JSON.stringify(userTransactionPromise,null,2)});
+      .json({
+        messgae:
+          '선수 판매 취소가 완료 되었습니다' +
+          JSON.stringify(userTransactionPromise, null, 2),
+      });
   } catch (error) {
     return res
       .status(500)
