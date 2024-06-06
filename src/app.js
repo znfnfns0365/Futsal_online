@@ -7,6 +7,7 @@ import kickoffRouter from './routers/kickoff.js';
 import playersRouter from './routers/players.js';
 import storeRouter from './routers/store.js';
 import matchRouter from './routers/matches.js';
+import squadRouter from './routers/squads.js';
 
 const app = express();
 const PORT = 3001;
@@ -21,7 +22,7 @@ app.use('/api/kickoff', kickoffRouter);
 app.use('/api/player', playersRouter);
 app.use('/api/store', storeRouter);
 app.use('/api/matches', matchRouter);
-
+app.use('/api/squad', squadRouter);
 
 app.listen(PORT, () => {
     console.log('서버가 3001 포트에서 열렸습니다');

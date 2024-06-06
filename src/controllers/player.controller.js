@@ -415,3 +415,32 @@ export const playerUpgrade = async (req, res, next) => {
     return res.status(400).json({ errorMessage: err.message });
   }
 };
+
+// 강화 가능 선수 조회 api
+export const canUpgrade = async (req, res, next) => {
+  const director = req.params.director;
+  const team = await userPrisma.teams.findFirst({
+    where: { director },
+    select: { candidate_players: true },
+  });
+  let obj = {};
+  for (let val of team.candidate_players) {
+    if (obj[val.name]) {
+      obj[val.name].push({
+        id: val.id,
+        enhance_figure: val.player_unique_id % 10,
+      });
+    } else {
+      obj[val.name] = [
+        { id: val.id, enhance_figure: val.player_unique_id % 10 },
+      ];
+    }
+  }
+  let answer = {};
+  for (let key in obj) {
+    if (obj[key].length > 1) {
+      answer[key] = obj[key];
+    }
+  }
+  return res.status(200).json(answer);
+};
