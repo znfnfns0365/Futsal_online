@@ -350,7 +350,7 @@ export const cancelSell = async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json({ errorMessage: error + '--트랜잭션 과정에서 오류 발생' });
+      .json({ errorMessage: error,messgae:'--트랜잭션 과정에서 오류 발생' });
   }
 };
 
