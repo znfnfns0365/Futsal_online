@@ -169,7 +169,7 @@ async function pickPlayer() {
     return players[randomIndex];
     */
   const DAY = new Date();
-  const id = DAY.getTime();
+  const id = String(DAY.getTime());
   const condition = 100;
   const randomIndex = Math.floor(Math.random() * players.length);
   const { player_unique_id, name } = players[randomIndex];
