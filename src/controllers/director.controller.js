@@ -19,11 +19,9 @@ export const createDirector = async (req, res) => {
 
     //ranking 감독은 api상 만들지 못하도록 예외 처리
     if (director === 'ranking' || director === 'upgrade') {
-      return res
-        .status(400)
-        .json({
-          errorMessage: `${director}(이)라는 감독명은 제한되어 있습니다.`,
-        });
+      return res.status(400).json({
+        errorMessage: `${director}(이)라는 감독명은 제한되어 있습니다.`,
+      });
     }
 
     if (sameName) {
@@ -262,7 +260,7 @@ export const ranking = async (req, res) => {
         OR: [{ win: { gt: 0 } }, { draw: { gt: 0 } }, { lose: { gt: 0 } }],
       },
       orderBy: {
-        rating: 'asc',
+        rating: 'desc',
       },
       select: {
         director: true,
