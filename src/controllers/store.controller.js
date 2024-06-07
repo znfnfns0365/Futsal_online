@@ -102,9 +102,8 @@ export const sellPlayer = async (req, res) => {
     ]);
 
     return res.status(201).json({
-      message:
-        '판매 등록이 성공적으로 이루어졌습니다' +
-        JSON.stringify(storeTransaction, null, 2),
+      message: '판매 등록이 성공적으로 이루어졌습니다',
+      '판매 정보': storeTransaction,
     });
   } catch (error) {
     return res.status(500).json({ error: error + '--판매 트랜잭션 오류' });
@@ -345,9 +344,8 @@ export const cancelSell = async (req, res) => {
     });
 
     return res.status(201).json({
-      messgae:
-        '선수 판매 취소가 완료 되었습니다' +
-        JSON.stringify(userTransactionPromise, null, 2),
+      messgae: '선수 판매 취소가 완료 되었습니다',
+      '취소 정보': userTransactionPromise,
     });
   } catch (error) {
     return res
@@ -393,7 +391,7 @@ export const marketPrice = async (req, res) => {
         player_unique_id: +player_unique_id,
       },
     });
-    if (search.length==0) {
+    if (search.length == 0) {
       return res
         .status(404)
         .json({ messgae: '해당 선수는 판매된 기록이 존재하지 않습니다' });

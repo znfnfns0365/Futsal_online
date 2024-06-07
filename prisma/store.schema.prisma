@@ -12,7 +12,7 @@ model store {
   sell_id          Int      @id @default(autoincrement()) @map("sell_id")
   seller           String   @map("seller")
   player_unique_id Int      @map("player_unique_id")
-  id               Int      @unique @map("id")
+  id               String      @unique @map("id")
   name             String   @map("name")
   price            Int      @map("price")
   stat             Json     @map("stat")
